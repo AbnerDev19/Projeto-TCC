@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trilha Acadêmica</title>
+<style>
+  :root {
+    --bg: #12151a;
+    --panel: #1a1e26;
+    --panel-2: #21262f;
+    --line: #2b3140;
+    --text: #e7e9ee;
+    --text-dim: #93a0b4;
+    --accent: #5eb1a3;
+    --accent-2: #d9a441;
+    --danger: #c26b5f;
+    font-family: "Iowan Old Style", "Georgia", serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  header .eyebrow {
+    font-family: "Iowan Old Style", Georgia, serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  header h1 {
+    margin: 0;
+    font-family: Georgia, "Iowan Old Style", serif;
+    font-weight: 600;
+    font-size: 28px;
+  }
+  header p { color: var(--text-dim); margin: 6px 0 0; max-width: 640px; font-size: 14px; }
+
+  main {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 28px 32px 80px;
+    display: grid;
+    gap: 28px;
+  }
+
+  section.panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+  }
+  section.panel h2 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+  section.panel .sub { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; }
+
+  .curso-nome { font-size: 20px; font-weight: 600; margin-bottom: 2px; }
+  .curso-meta { color: var(--text-dim); font-size: 13px; }
+
+  .bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; cursor: pointer; }
+  .bar-row .label {
+    width: 200px; flex-shrink: 0; font-size: 13.5px;
+    display: flex; justify-content: space-between; padding-right: 6px;
+  }
+  .bar-row .label b { color: var(--text-dim); font-weight: 500; }
+  .bar-track {
+    flex: 1; height: 10px; background: var(--panel-2);
+    border-radius: 6px; overflow: hidden; border: 1px solid var(--line);
+  }
+  .bar-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius: 6px; transition: width .5s ease;
+  }
+  .bar-row:hover .label { color: var(--accent); }
+  .bar-row.selected .label { color: var(--accent-2); font-weight: 700; }
+
+  .trilha-wrap { display: flex; flex-direction: column; gap: 0; margin-top: 4px; }
+  .etapa {
+    display: flex; gap: 16px; padding: 10px 0; position: relative;
+  }
+  .etapa .ponto {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--panel-2); border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; z-index: 1;
+  }
+  .etapa::before {
+    content: ""; position: absolute; left: 12.5px; top: -4px; bottom: -4px;
+    width: 2px; background: var(--line);
+  }
+  .etapa:first-child::before { top: 17px; }
+  .etapa:last-child::before { bottom: calc(100% - 17px); }
+  .etapa .conteudo b { display: block; font-size: 14.5px; }
+  .etapa .conteudo span { color: var(--text-dim); font-size: 12.5px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  ul.simples { margin: 0; padding-left: 18px; color: var(--text-dim); font-size: 13.5px; line-height: 1.7; }
+
+  .justificativa {
+    background: var(--panel-2); border-left: 3px solid var(--accent);
+    padding: 12px 16px; font-size: 13.5px; color: var(--text-dim); border-radius: 4px; margin-top: 14px;
+  }
+  .compat-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; background: var(--panel-2); border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+  .empty { color: var(--text-dim); font-size: 13.5px; font-style: italic; }
+  .loading { color: var(--text-dim); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Protótipo · Teste de conceito</div>
+  <h1>Trilha Acadêmica</h1>
+  <p>Descubra o que sua graduação já cobre e o que falta para seguir a área que você quer explorar. Clique em uma área abaixo para gerar sua trilha.</p>
+</header>
+
+<main>
+  <section class="panel" id="curso-panel">
+    <h2>Sua formação</h2>
+    <div class="loading">Carregando curso…</div>
+  </section>
+
+  <section class="panel">
+    <h2>Compatibilidade por área</h2>
+    <div class="sub">Baseado nas disciplinas da sua grade curricular. Clique em uma área para gerar a trilha recomendada.</div>
+    <div id="dashboard"><div class="loading">Calculando…</div></div>
+  </section>
+
+  <section class="panel" id="recomendacao-panel" style="display:none;">
+    <h2 id="rec-titulo">Trilha recomendada</h2>
+    <div class="sub" id="rec-sub"></div>
+    <div id="rec-conteudo"></div>
+  </section>
+</main>
+
+<script>
+const API = "";
+let CURSO_ID = null;
+let areaSelecionada = null;
+
+async function init() {
+  const cursos = await fetch(`${API}/api/cursos`).then(r => r.json());
+  if (!cursos.length) return;
+  const curso = cursos[0];
+  CURSO_ID = curso.id;
+
+  document.getElementById("curso-panel").innerHTML = `
+    <div class="curso-nome">${curso.nome}</div>
+    <div class="curso-meta">${curso.modalidade || ""} · ${curso.duracao_semestres || "?"} semestres · ${curso.carga_horaria || "?"}h totais</div>
+  `;
+
+  const dash = await fetch(`${API}/api/cursos/${CURSO_ID}/dashboard`).then(r => r.json());
+  const dashDiv = document.getElementById("dashboard");
+  dashDiv.innerHTML = dash.map(item => `
+    <div class="bar-row" data-area="${item.area}" onclick="selecionarArea('${item.area.replace(/'/g, "\\'")}')">
+      <div class="label"><span>${item.area}</span><b>${item.compatibilidade_percentual}%</b></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${item.compatibilidade_percentual}%"></div></div>
+    </div>
+  `).join("");
+}
+
+async function selecionarArea(nomeArea) {
+  document.querySelectorAll(".bar-row").forEach(el => {
+    el.classList.toggle("selected", el.dataset.area === nomeArea);
+  });
+
+  const areas = await fetch(`${API}/api/areas`).then(r => r.json());
+  const area = areas.find(a => a.nome === nomeArea);
+  if (!area) return;
+
+  const panel = document.getElementById("recomendacao-panel");
+  panel.style.display = "block";
+  document.getElementById("rec-titulo").textContent = `Trilha: ${area.nome}`;
+  document.getElementById("rec-sub").textContent = "Gerando recomendação…";
+  document.getElementById("rec-conteudo").innerHTML = "";
+
+  const rec = await fetch(`${API}/api/cursos/${CURSO_ID}/recomendacao/${area.id}`).then(r => r.json());
+  const gap = await fetch(`${API}/api/cursos/${CURSO_ID}/gap/${area.id}`).then(r => r.json());
+
+  document.getElementById("rec-sub").innerHTML = `<span class="compat-badge">${rec.compatibilidade_percentual}% de compatibilidade</span>`;
+
+  const trilhaHtml = rec.trilha_sugerida.length ? `
+    <div class="trilha-wrap">
+      ${rec.trilha_sugerida.map(e => `
+        <div class="etapa">
+          <div class="ponto">${e.ordem}</div>
+          <div class="conteudo">
+            <b>${e.conhecimento}</b>
+            ${e.curso_sugerido ? `<span>${e.curso_sugerido}</span>` : ""}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  ` : `<p class="empty">Ainda não há uma trilha cadastrada para esta área.</p>`;
+
+  const gapHtml = `
+    <div class="grid-2" style="margin-top:22px;">
+      <div>
+        <h2 style="margin-bottom:8px;">Você já domina</h2>
+        ${gap.disciplinas_ja_cursadas.length
+          ? `<ul class="simples">${gap.disciplinas_ja_cursadas.map(d => `<li>${d}</li>`).join("")}</ul>`
+          : `<p class="empty">Nenhuma disciplina cursada relacionada ainda.</p>`}
+      </div>
+      <div>
+        <h2 style="margin-bottom:8px;">Recomenda-se aprofundar</h2>
+        ${gap.disciplinas_recomendadas.length
+          ? `<ul class="simples">${gap.disciplinas_recomendadas.map(d => `<li>${d}</li>`).join("")}</ul>`
+          : `<p class="empty">Você já cobre todo o conteúdo mapeado para esta área.</p>`}
+      </div>
+    </div>
+  `;
+
+  const cursosHtml = rec.cursos_complementares.length ? `
+    <h2 style="margin-top:22px; margin-bottom:8px;">Cursos complementares</h2>
+    <ul class="simples">
+      ${rec.cursos_complementares.map(c => `<li>${c.nome} — ${c.instituicao || ""} (${c.modalidade || ""}, ${c.carga_horaria || "?"}h)</li>`).join("")}
+    </ul>` : "";
+
+  const posHtml = rec.pos_graduacoes.length ? `
+    <h2 style="margin-top:22px; margin-bottom:8px;">Pós-graduação compatível</h2>
+    <ul class="simples">
+      ${rec.pos_graduacoes.map(p => `<li>${p.nome} (${p.tipo || ""}) — ${p.instituicao || ""}</li>`).join("")}
+    </ul>` : "";
+
+  document.getElementById("rec-conteudo").innerHTML =
+    trilhaHtml + gapHtml + cursosHtml + posHtml +
+    `<div class="justificativa">${rec.justificativa}</div>`;
+
+  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+init();
+</script>
+
+</body>
+</html>
