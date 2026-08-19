@@ -5,19 +5,16 @@ Rodar com: python -m app.seed
 """
 from .database import Base, engine, SessionLocal
 from . import models
+from .area_data import AREA_DEFINICOES
 
-#            nome, descrição, pontos_ideais (nível de domínio esperado na área)
+# Todas as áreas do sistema vêm de area_data.py (fonte única de verdade,
+# também usada pelo classificador automático de disciplinas de PPCs reais —
+# seção 28). Isso garante que o dashboard mostre, desde o primeiro acesso,
+# as mesmas áreas para as quais um PPC enviado pelo usuário pode ser
+# classificado, e não só as 10 áreas de TI do curso de demonstração.
 AREAS = [
-    ("Desenvolvimento Web", "Construção de aplicações e sistemas para a web.", 9),
-    ("Engenharia de Software", "Processos, arquitetura e qualidade de software.", 12),
-    ("Banco de Dados", "Modelagem, armazenamento e consulta de dados.", 8),
-    ("Ciência de Dados", "Análise, estatística e extração de conhecimento a partir de dados.", 13),
-    ("Inteligência Artificial", "Aprendizado de máquina, IA e automação de decisões.", 12),
-    ("Redes", "Infraestrutura, protocolos e comunicação de dados.", 7),
-    ("Segurança da Informação", "Proteção de dados, sistemas e infraestrutura.", 8),
-    ("Computação em Nuvem", "Infraestrutura, deploy e escalabilidade em nuvem.", 7),
-    ("Gestão de Tecnologia", "Gestão de projetos, produtos e equipes de TI.", 9),
-    ("Pesquisa Acadêmica", "Iniciação científica, pesquisa e produção acadêmica.", 5),
+    (nome, defin["descricao"], defin["pontos_ideais"])
+    for nome, defin in AREA_DEFINICOES.items()
 ]
 
 # nome, semestre, carga_horaria, ementa
@@ -105,6 +102,7 @@ def seed():
             carga_horaria=2400,
             duracao_semestres=6,
             modalidade="Presencial",
+            origem="demonstracao",
         )
         db.add(curso)
         db.flush()

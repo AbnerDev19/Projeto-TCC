@@ -4,249 +4,873 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trilha Acadêmica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Libre+Franklin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #12151a;
-    --panel: #1a1e26;
-    --panel-2: #21262f;
-    --line: #2b3140;
-    --text: #e7e9ee;
-    --text-dim: #93a0b4;
-    --accent: #5eb1a3;
-    --accent-2: #d9a441;
-    --danger: #c26b5f;
-    font-family: "Iowan Old Style", "Georgia", serif;
+    /* Paleta — mapa topográfico de trilha, não o "dark SaaS" genérico */
+    --paper: #EEE7D6;
+    --card: #FBF7EC;
+    --card-locked: #F1ECDE;
+    --ink: #232E27;
+    --ink-soft: #5C6B5C;
+    --ink-faint: #93A08F;
+    --trail: #6F8354;
+    --trail-soft: #B9C6A4;
+    --waypoint: #A8752E;
+    --waypoint-soft: #EADCC0;
+    --water: #385D66;
+    --water-soft: #DCE7E6;
+    --line: #DAD0B4;
+    --danger: #A6482F;
+    --danger-soft: #F1DDD3;
+
+    --font-display: "Fraunces", Georgia, serif;
+    --font-body: "Libre Franklin", "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   }
+
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
   body {
     margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    background-image:
+      repeating-radial-gradient(circle at 12% 6%, transparent 0, transparent 42px, rgba(35,46,39,.035) 43px, transparent 44px),
+      repeating-radial-gradient(circle at 96% 70%, transparent 0, transparent 55px, rgba(56,93,102,.03) 56px, transparent 57px);
+    background-attachment: fixed;
   }
+
+  /* ---------- Cabeçalho ---------- */
   header {
-    padding: 28px 32px 20px;
+    padding: 44px 28px 30px;
+    text-align: center;
     border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(255,255,255,.35), transparent);
   }
   header .eyebrow {
-    font-family: "Iowan Old Style", Georgia, serif;
-    letter-spacing: .08em;
+    font-family: var(--font-mono);
+    letter-spacing: .12em;
     text-transform: uppercase;
-    font-size: 12px;
-    color: var(--accent);
-    margin-bottom: 6px;
+    font-size: 11.5px;
+    color: var(--waypoint);
+    margin-bottom: 10px;
   }
   header h1 {
     margin: 0;
-    font-family: Georgia, "Iowan Old Style", serif;
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
     font-weight: 600;
-    font-size: 28px;
+    font-size: clamp(32px, 5vw, 46px);
+    letter-spacing: -.01em;
   }
-  header p { color: var(--text-dim); margin: 6px 0 0; max-width: 640px; font-size: 14px; }
-
-  main {
-    max-width: 1040px;
-    margin: 0 auto;
-    padding: 28px 32px 80px;
-    display: grid;
-    gap: 28px;
+  header h1 em {
+    font-style: italic;
+    color: var(--trail);
   }
-
-  section.panel {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 22px 24px;
-  }
-  section.panel h2 {
-    margin: 0 0 4px;
+  header p {
+    color: var(--ink-soft);
+    margin: 12px auto 0;
+    max-width: 480px;
     font-size: 15px;
+  }
+
+  /* ---------- Trilha vertical (elemento assinatura) ---------- */
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 24px 100px;
+  }
+
+  .trilha {
+    position: relative;
+  }
+  .trilha-rail,
+  .trilha-rail-progress {
+    position: absolute;
+    left: 21px;
+    top: 6px;
+    width: 3px;
+    border-radius: 3px;
+  }
+  .trilha-rail {
+    top: 6px;
+    bottom: 6px;
+    background: repeating-linear-gradient(
+      to bottom, var(--line) 0, var(--line) 7px, transparent 7px, transparent 13px
+    );
+  }
+  .trilha-rail-progress {
+    height: 0px;
+    background: var(--trail);
+    transition: height 1s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 0 0 3px rgba(111,131,84,.08);
+  }
+
+  .etapa-principal {
+    position: relative;
+    display: flex;
+    gap: 22px;
+    padding-bottom: 46px;
+  }
+  .etapa-principal:last-child { padding-bottom: 4px; }
+
+  .marcador {
+    flex-shrink: 0;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2.5px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 14px; font-weight: 500;
+    color: var(--ink-faint);
+    z-index: 1;
+    transition: border-color .4s ease, color .4s ease, background .4s ease, transform .3s ease;
+  }
+  .etapa-principal.concluido .marcador {
+    background: var(--trail);
+    border-color: var(--trail);
+    color: var(--card);
+  }
+  .etapa-principal.ativo .marcador {
+    background: var(--waypoint-soft);
+    border-color: var(--waypoint);
+    color: var(--waypoint);
+    animation: pulso 1.8s ease-out 1;
+  }
+  @keyframes pulso {
+    0% { box-shadow: 0 0 0 0 rgba(168,117,46,.35); }
+    100% { box-shadow: 0 0 0 12px rgba(168,117,46,0); }
+  }
+
+  .etapa-corpo { flex: 1; min-width: 0; padding-top: 2px; }
+  .etapa-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: .08em;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    color: var(--text-dim);
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  .etapa-principal.ativo .etapa-eyebrow,
+  .etapa-principal.concluido .etapa-eyebrow { color: var(--trail); }
+
+  .etapa-titulo {
+    font-family: var(--font-display);
+    font-size: 23px;
     font-weight: 600;
+    margin: 0 0 6px;
   }
-  section.panel .sub { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; }
+  .etapa-desc {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0 0 16px;
+    max-width: 46ch;
+  }
 
-  .curso-nome { font-size: 20px; font-weight: 600; margin-bottom: 2px; }
-  .curso-meta { color: var(--text-dim); font-size: 13px; }
+  .cartao {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: 0 1px 0 rgba(35,46,39,.03);
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity .5s ease, transform .5s ease;
+  }
 
-  .bar-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; cursor: pointer; }
+  .etapa-principal.bloqueado .cartao {
+    background: var(--card-locked);
+    pointer-events: none;
+  }
+  .etapa-principal.bloqueado .etapa-titulo,
+  .etapa-principal.bloqueado .etapa-desc { color: var(--ink-faint); }
+  .etapa-principal.bloqueado .cartao-interior { opacity: .45; }
+
+  /* ---------- Upload (etapa 1) ---------- */
+  .dropzone {
+    border: 2px dashed var(--line);
+    border-radius: 10px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s ease, background .2s ease;
+  }
+  .dropzone:hover, .dropzone.arrastando {
+    border-color: var(--waypoint);
+    background: var(--waypoint-soft);
+  }
+  .dropzone svg { width: 30px; height: 30px; color: var(--waypoint); margin-bottom: 10px; }
+  .dropzone .titulo-drop { font-weight: 600; font-size: 14.5px; }
+  .dropzone .sub-drop { color: var(--ink-soft); font-size: 12.5px; margin-top: 4px; }
+  input[type=file] { display: none; }
+
+  .demo-link {
+    display: inline-block; margin-top: 14px; font-size: 13px;
+    color: var(--water); text-decoration: underline; text-underline-offset: 3px;
+    cursor: pointer; background: none; border: none; padding: 0; font-family: inherit;
+  }
+  .demo-link:hover { color: var(--ink); }
+
+  .aviso-lista {
+    margin: 14px 0 0; padding: 0; list-style: none;
+  }
+  .aviso-lista li {
+    display: flex; gap: 8px; font-size: 12.5px; color: #7A5116;
+    background: var(--waypoint-soft); border: 1px solid var(--waypoint);
+    border-radius: 8px; padding: 9px 12px; margin-top: 8px; line-height: 1.5;
+  }
+  .aviso-lista li::before { content: "⚠"; flex-shrink: 0; }
+
+  /* ---------- Revisão de disciplinas (etapa 2) ---------- */
+  .curso-campos {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-bottom: 18px;
+  }
+  .campo label {
+    display: block; font-size: 11.5px; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--ink-faint); margin-bottom: 5px;
+    font-family: var(--font-mono);
+  }
+  .campo input, .campo select {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--line);
+    border-radius: 7px; background: #fff; font-family: var(--font-body);
+    font-size: 13.5px; color: var(--ink);
+  }
+  .campo input:focus, .campo select:focus,
+  button:focus-visible, .dropzone:focus-visible, .bar-row:focus-visible {
+    outline: 2.5px solid var(--water); outline-offset: 2px;
+  }
+
+  .semestre-grupo { margin-bottom: 16px; }
+  .semestre-grupo h4 {
+    font-family: var(--font-mono); font-size: 12px; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--water); margin: 0 0 8px;
+  }
+  .disciplina-linha {
+    display: grid; grid-template-columns: 1fr 90px 34px; gap: 8px;
+    margin-bottom: 7px; align-items: center;
+  }
+  .disciplina-linha input {
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+    font-size: 13.5px; font-family: var(--font-body); background: #fff; color: var(--ink);
+  }
+  .disciplina-linha input[type=number] { font-family: var(--font-mono); text-align: center; }
+  .btn-remover {
+    width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--line);
+    background: #fff; color: var(--danger); cursor: pointer; font-size: 15px; line-height: 1;
+  }
+  .btn-remover:hover { background: var(--danger-soft); border-color: var(--danger); }
+
+  .btn-adicionar-linha {
+    font-size: 12.5px; color: var(--water); background: none; border: 1px dashed var(--water);
+    border-radius: 7px; padding: 7px 12px; cursor: pointer; font-family: var(--font-body);
+    margin-top: 4px;
+  }
+  .btn-adicionar-linha:hover { background: var(--water-soft); }
+
+  /* ---------- Botões principais ---------- */
+  .btn-principal {
+    font-family: var(--font-body); font-weight: 600; font-size: 14px;
+    background: var(--trail); color: #fff; border: none; border-radius: 8px;
+    padding: 12px 22px; cursor: pointer; margin-top: 18px;
+    transition: background .2s ease, transform .1s ease;
+  }
+  .btn-principal:hover { background: #5c6f45; }
+  .btn-principal:active { transform: scale(.98); }
+  .btn-principal:disabled { background: var(--ink-faint); cursor: not-allowed; }
+  .btn-secundario {
+    font-family: var(--font-body); font-weight: 600; font-size: 13px;
+    background: none; color: var(--water); border: 1.5px solid var(--water);
+    border-radius: 8px; padding: 9px 16px; cursor: pointer; margin-top: 10px; margin-left: 8px;
+  }
+  .btn-secundario:hover { background: var(--water-soft); }
+
+  /* ---------- Compatibilidade (etapa 3) ---------- */
+  .curso-resumo { font-size: 13px; color: var(--ink-soft); margin-bottom: 16px; }
+  .curso-resumo b { color: var(--ink); }
+
+  .bar-row {
+    display: flex; align-items: center; gap: 14px; margin: 9px 0;
+    cursor: pointer; padding: 4px; border-radius: 8px; transition: background .15s ease;
+  }
+  .bar-row:hover { background: rgba(111,131,84,.08); }
   .bar-row .label {
-    width: 200px; flex-shrink: 0; font-size: 13.5px;
-    display: flex; justify-content: space-between; padding-right: 6px;
+    width: 172px; flex-shrink: 0; font-size: 13px;
+    display: flex; justify-content: space-between; gap: 8px;
   }
-  .bar-row .label b { color: var(--text-dim); font-weight: 500; }
+  .bar-row .label b { font-family: var(--font-mono); font-weight: 500; color: var(--ink-soft); }
   .bar-track {
-    flex: 1; height: 10px; background: var(--panel-2);
-    border-radius: 6px; overflow: hidden; border: 1px solid var(--line);
+    flex: 1; height: 9px; background: rgba(35,46,39,.07);
+    border-radius: 6px; overflow: hidden;
   }
   .bar-fill {
-    height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    border-radius: 6px; transition: width .5s ease;
+    height: 100%; background: var(--trail-soft); border-radius: 6px;
+    transition: width .7s cubic-bezier(.4,0,.2,1);
   }
-  .bar-row:hover .label { color: var(--accent); }
-  .bar-row.selected .label { color: var(--accent-2); font-weight: 700; }
+  .bar-row.selecionada { background: var(--waypoint-soft); }
+  .bar-row.selecionada .label { font-weight: 700; color: var(--waypoint); }
+  .bar-row.selecionada .bar-fill { background: var(--waypoint); }
 
-  .trilha-wrap { display: flex; flex-direction: column; gap: 0; margin-top: 4px; }
-  .etapa {
-    display: flex; gap: 16px; padding: 10px 0; position: relative;
+  /* ---------- Trilha recomendada + gap (etapa 4) ---------- */
+  .compat-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 13px; border-radius: 20px; font-family: var(--font-mono);
+    font-size: 12.5px; font-weight: 500; background: var(--waypoint-soft);
+    border: 1px solid var(--waypoint); color: #7A5116; margin-bottom: 18px;
   }
-  .etapa .ponto {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--panel-2); border: 2px solid var(--accent);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; z-index: 1;
+
+  .sub-secao-titulo {
+    font-family: var(--font-display); font-weight: 600; font-size: 16.5px;
+    margin: 26px 0 10px;
   }
-  .etapa::before {
-    content: ""; position: absolute; left: 12.5px; top: -4px; bottom: -4px;
-    width: 2px; background: var(--line);
+  .sub-secao-titulo:first-child { margin-top: 0; }
+
+  .trilha-etapas-wrap { position: relative; margin-left: 4px; }
+  .sub-etapa { display: flex; gap: 14px; position: relative; padding: 7px 0; }
+  .sub-etapa .ponto {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--water-soft);
+    border: 2px solid var(--water); display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; color: var(--water);
+    flex-shrink: 0; z-index: 1;
   }
-  .etapa:first-child::before { top: 17px; }
-  .etapa:last-child::before { bottom: calc(100% - 17px); }
-  .etapa .conteudo b { display: block; font-size: 14.5px; }
-  .etapa .conteudo span { color: var(--text-dim); font-size: 12.5px; }
+  .sub-etapa::before {
+    content: ""; position: absolute; left: 10px; top: -2px; bottom: -2px; width: 2px; background: var(--line);
+  }
+  .sub-etapa:first-child::before { top: 13px; }
+  .sub-etapa:last-child::before { bottom: calc(100% - 13px); }
+  .sub-etapa .conteudo b { display: block; font-size: 13.5px; }
+  .sub-etapa .conteudo span { color: var(--ink-soft); font-size: 12px; }
 
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-  ul.simples { margin: 0; padding-left: 18px; color: var(--text-dim); font-size: 13.5px; line-height: 1.7; }
+  @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } .curso-campos { grid-template-columns: 1fr; } }
+
+  ul.simples { margin: 0; padding-left: 17px; color: var(--ink-soft); font-size: 13px; line-height: 1.8; }
 
   .justificativa {
-    background: var(--panel-2); border-left: 3px solid var(--accent);
-    padding: 12px 16px; font-size: 13.5px; color: var(--text-dim); border-radius: 4px; margin-top: 14px;
+    background: var(--water-soft); border-left: 3px solid var(--water);
+    padding: 13px 16px; font-size: 13px; color: #2C4B52; border-radius: 4px; margin-top: 22px;
   }
-  .compat-badge {
-    display: inline-block; padding: 3px 10px; border-radius: 20px;
-    font-size: 12px; font-weight: 700; background: var(--panel-2); border: 1px solid var(--accent);
-    color: var(--accent);
+  .empty { color: var(--ink-faint); font-size: 13px; font-style: italic; }
+
+  /* ---------- Formações reais ---------- */
+  .formacoes-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 4px;
   }
-  .empty { color: var(--text-dim); font-size: 13.5px; font-style: italic; }
-  .loading { color: var(--text-dim); font-size: 13px; }
+  .estado-filtro { display: flex; align-items: center; gap: 6px; }
+  .estado-filtro input {
+    width: 58px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px;
+    text-align: center; text-transform: uppercase; font-family: var(--font-mono); font-size: 13px;
+  }
+  .estado-filtro button {
+    font-size: 12px; font-family: var(--font-body); font-weight: 600; color: var(--water);
+    background: none; border: 1.5px solid var(--water); border-radius: 6px; padding: 7px 11px; cursor: pointer;
+  }
+  .estado-filtro button:hover { background: var(--water-soft); }
+
+  .disclaimer-busca {
+    font-size: 12px; color: var(--ink-faint); margin: 6px 0 16px; line-height: 1.6;
+  }
+
+  .formacao-categoria-titulo {
+    font-family: var(--font-mono); font-size: 11.5px; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--water); margin: 18px 0 8px;
+  }
+  .formacao-categoria-titulo:first-of-type { margin-top: 10px; }
+
+  .formacao-card {
+    border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+    margin-bottom: 10px; background: #fff;
+  }
+  .formacao-card .f-titulo { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .formacao-card .f-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 7px; }
+  .badge {
+    font-family: var(--font-mono); font-size: 11px; padding: 3px 9px;
+    border-radius: 12px; background: var(--water-soft); color: var(--water); border: 1px solid var(--water);
+  }
+  .badge.periodo { background: var(--waypoint-soft); color: #7A5116; border-color: var(--waypoint); }
+  .badge.sem-periodo { background: rgba(35,46,39,.06); color: var(--ink-faint); border-color: var(--line); }
+  .formacao-card .f-resumo { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 8px; line-height: 1.55; }
+  .formacao-card a {
+    font-size: 12.5px; color: var(--water); font-weight: 600; text-decoration: none;
+  }
+  .formacao-card a:hover { text-decoration: underline; }
+
+  .skeleton-card {
+    height: 78px; border-radius: 10px; margin-bottom: 10px;
+    background: linear-gradient(90deg, var(--card-locked) 25%, var(--line) 37%, var(--card-locked) 63%);
+    background-size: 400% 100%; animation: brilho 1.4s ease infinite;
+  }
+  @keyframes brilho { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+  .erro-busca {
+    font-size: 13px; color: var(--danger); background: var(--danger-soft);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+  }
+  .erro-busca button {
+    display: block; margin-top: 8px; font-size: 12.5px; font-weight: 600; color: var(--danger);
+    background: #fff; border: 1.5px solid var(--danger); border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  }
+
+  footer {
+    text-align: center; font-size: 12px; color: var(--ink-faint);
+    padding: 20px; border-top: 1px solid var(--line);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+    html { scroll-behavior: auto; }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="eyebrow">Protótipo · Teste de conceito</div>
-  <h1>Trilha Acadêmica</h1>
-  <p>Descubra o que sua graduação já cobre e o que falta para seguir a área que você quer explorar. Clique em uma área abaixo para gerar sua trilha.</p>
+  <div class="eyebrow">Da grade curricular ao próximo passo real</div>
+  <h1>Trilha <em>Acadêmica</em></h1>
+  <p>Envie o PPC real do seu curso e descubra, área por área, o que sua grade já cobre — e quais formações reais existem hoje para você seguir a partir daqui.</p>
 </header>
 
 <main>
-  <section class="panel" id="curso-panel">
-    <h2>Sua formação</h2>
-    <div class="loading">Carregando curso…</div>
-  </section>
+  <div class="trilha" id="trilha">
+    <div class="trilha-rail"></div>
+    <div class="trilha-rail-progress" id="rail-progress"></div>
 
-  <section class="panel">
-    <h2>Compatibilidade por área</h2>
-    <div class="sub">Baseado nas disciplinas da sua grade curricular. Clique em uma área para gerar a trilha recomendada.</div>
-    <div id="dashboard"><div class="loading">Calculando…</div></div>
-  </section>
+    <!-- ETAPA 1 -->
+    <div class="etapa-principal ativo" id="etapa-1" data-marcador-topo>
+      <div class="marcador">01</div>
+      <div class="etapa-corpo">
+        <div class="etapa-eyebrow">Ponto de partida</div>
+        <h2 class="etapa-titulo">Envie seu PPC</h2>
+        <p class="etapa-desc">O Projeto Pedagógico de Curso (PDF) da sua instituição. Vamos ler a matriz curricular direto do documento.</p>
+        <div class="cartao">
+          <div class="cartao-interior">
+            <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Enviar arquivo PDF do PPC">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+              <div class="titulo-drop" id="dropzone-titulo">Arraste o PDF aqui ou clique para escolher</div>
+              <div class="sub-drop">Só o texto do documento — nada é enviado a terceiros</div>
+            </div>
+            <input type="file" id="input-arquivo" accept="application/pdf">
+            <ul class="aviso-lista" id="avisos-lista" style="display:none;"></ul>
+            <div>
+              <button class="demo-link" id="btn-demo">ou veja como funciona com um curso de demonstração →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <section class="panel" id="recomendacao-panel" style="display:none;">
-    <h2 id="rec-titulo">Trilha recomendada</h2>
-    <div class="sub" id="rec-sub"></div>
-    <div id="rec-conteudo"></div>
-  </section>
+    <!-- ETAPA 2 -->
+    <div class="etapa-principal bloqueado" id="etapa-2">
+      <div class="marcador">02</div>
+      <div class="etapa-corpo">
+        <div class="etapa-eyebrow">Revisão</div>
+        <h2 class="etapa-titulo">Revise sua grade</h2>
+        <p class="etapa-desc">A leitura automática pode errar — corrija nomes, semestres ou adicione disciplinas antes de confirmar.</p>
+        <div class="cartao">
+          <div class="cartao-interior" id="etapa-2-conteudo">
+            <div class="empty">Envie o PPC na etapa anterior para revisar aqui.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETAPA 3 -->
+    <div class="etapa-principal bloqueado" id="etapa-3">
+      <div class="marcador">03</div>
+      <div class="etapa-corpo">
+        <div class="etapa-eyebrow">Diagnóstico</div>
+        <h2 class="etapa-titulo">Sua compatibilidade por área</h2>
+        <p class="etapa-desc">Calculado a partir das disciplinas da sua grade. Escolha uma área para gerar sua trilha.</p>
+        <div class="cartao">
+          <div class="cartao-interior" id="etapa-3-conteudo">
+            <div class="empty">Confirme sua grade na etapa anterior para ver a compatibilidade.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ETAPA 4 -->
+    <div class="etapa-principal bloqueado" id="etapa-4">
+      <div class="marcador">04</div>
+      <div class="etapa-corpo">
+        <div class="etapa-eyebrow" id="etapa-4-eyebrow">Destino</div>
+        <h2 class="etapa-titulo" id="etapa-4-titulo">Sua trilha</h2>
+        <p class="etapa-desc">O que você já domina, o que falta, e formações reais — buscadas ao vivo — para seguir em frente.</p>
+        <div class="cartao">
+          <div class="cartao-interior" id="etapa-4-conteudo">
+            <div class="empty">Escolha uma área na etapa anterior para gerar sua trilha.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </main>
+
+<footer>Trilha Acadêmica · protótipo de teste de conceito</footer>
 
 <script>
 const API = "";
 let CURSO_ID = null;
-let areaSelecionada = null;
+let AREA_SELECIONADA = null;
+let PREVIA_PPC = null;      // resposta crua de /api/ppc/analisar
+let DISCIPLINAS_EDITAVEIS = []; // estado editável da etapa 2
+let PROX_ID_LINHA = 1;
 
-async function init() {
+/* ---------------- utilidades de trilha / navegação ---------------- */
+
+function marcarConcluido(numEtapa) {
+  document.getElementById(`etapa-${numEtapa}`).classList.remove("ativo");
+  document.getElementById(`etapa-${numEtapa}`).classList.add("concluido");
+}
+
+function desbloquear(numEtapa) {
+  const el = document.getElementById(`etapa-${numEtapa}`);
+  el.classList.remove("bloqueado");
+  el.classList.add("ativo");
+  atualizarProgressoTrilha();
+  setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 180);
+}
+
+function atualizarProgressoTrilha() {
+  // altura da barra de progresso = posição do marcador mais avançado desbloqueado
+  const etapas = [...document.querySelectorAll(".etapa-principal")];
+  let alvo = etapas[0];
+  etapas.forEach(e => { if (!e.classList.contains("bloqueado")) alvo = e; });
+  const marcador = alvo.querySelector(".marcador");
+  const trilhaEl = document.getElementById("trilha");
+  const offset = marcador.getBoundingClientRect().top - trilhaEl.getBoundingClientRect().top + marcador.offsetHeight / 2;
+  document.getElementById("rail-progress").style.height = `${Math.max(0, offset)}px`;
+}
+
+window.addEventListener("resize", atualizarProgressoTrilha);
+
+/* ---------------- ETAPA 1: upload do PPC ---------------- */
+
+const dropzone = document.getElementById("dropzone");
+const inputArquivo = document.getElementById("input-arquivo");
+
+dropzone.addEventListener("click", () => inputArquivo.click());
+dropzone.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputArquivo.click(); } });
+["dragover"].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add("arrastando"); }));
+["dragleave", "drop"].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove("arrastando"); }));
+dropzone.addEventListener("drop", e => {
+  const arquivo = e.dataTransfer.files[0];
+  if (arquivo) enviarPPC(arquivo);
+});
+inputArquivo.addEventListener("change", () => {
+  if (inputArquivo.files[0]) enviarPPC(inputArquivo.files[0]);
+});
+
+async function enviarPPC(arquivo) {
+  if (!arquivo.name.toLowerCase().endsWith(".pdf")) {
+    alert("Envie o PPC em formato PDF.");
+    return;
+  }
+  document.getElementById("dropzone-titulo").textContent = `Lendo ${arquivo.name}…`;
+  document.getElementById("avisos-lista").style.display = "none";
+
+  const formData = new FormData();
+  formData.append("arquivo", arquivo);
+
+  try {
+    const resp = await fetch(`${API}/api/ppc/analisar`, { method: "POST", body: formData });
+    if (!resp.ok) throw new Error("Falha na análise");
+    PREVIA_PPC = await resp.json();
+
+    document.getElementById("dropzone-titulo").textContent = `✓ ${arquivo.name} — ${PREVIA_PPC.disciplinas.length} disciplina(s) encontrada(s)`;
+
+    if (PREVIA_PPC.avisos.length) {
+      const lista = document.getElementById("avisos-lista");
+      lista.innerHTML = PREVIA_PPC.avisos.map(a => `<li>${a}</li>`).join("");
+      lista.style.display = "block";
+    }
+
+    DISCIPLINAS_EDITAVEIS = PREVIA_PPC.disciplinas.map(d => ({ ...d, _id: PROX_ID_LINHA++ }));
+    marcarConcluido(1);
+    renderEtapa2();
+    desbloquear(2);
+  } catch (err) {
+    document.getElementById("dropzone-titulo").textContent = "Não consegui ler esse PDF — tente novamente ou escolha outro arquivo";
+  }
+}
+
+document.getElementById("btn-demo").addEventListener("click", async () => {
   const cursos = await fetch(`${API}/api/cursos`).then(r => r.json());
-  if (!cursos.length) return;
-  const curso = cursos[0];
-  CURSO_ID = curso.id;
+  const demo = cursos.find(c => c.origem === "demonstracao") || cursos[0];
+  if (!demo) { alert("Nenhum curso de demonstração disponível."); return; }
+  CURSO_ID = demo.id;
+  document.getElementById("dropzone-titulo").textContent = `✓ Usando curso de demonstração: ${demo.nome}`;
+  marcarConcluido(1);
+  document.getElementById("etapa-2-conteudo").innerHTML = `<div class="empty">Etapa pulada — usando dados de demonstração já cadastrados.</div>`;
+  marcarConcluido(2);
+  desbloquear(3);
+  carregarDashboard();
+});
 
-  document.getElementById("curso-panel").innerHTML = `
-    <div class="curso-nome">${curso.nome}</div>
-    <div class="curso-meta">${curso.modalidade || ""} · ${curso.duracao_semestres || "?"} semestres · ${curso.carga_horaria || "?"}h totais</div>
+/* ---------------- ETAPA 2: revisão da grade extraída ---------------- */
+
+function renderEtapa2() {
+  const sugestao = PREVIA_PPC.curso_sugerido;
+  const camposHtml = `
+    <div class="curso-campos">
+      <div class="campo"><label>Nome do curso</label><input id="campo-nome-curso" value="${escapeAttr(sugestao.nome_curso || '')}" placeholder="Ex: Bacharelado em Sistemas de Informação"></div>
+      <div class="campo"><label>Instituição</label><input id="campo-instituicao" value="${escapeAttr(sugestao.instituicao || '')}" placeholder="Nome da instituição"></div>
+      <div class="campo"><label>Carga horária total</label><input id="campo-ch-total" type="number" value="${sugestao.carga_horaria_total || ''}" placeholder="Ex: 3200"></div>
+      <div class="campo"><label>Modalidade</label>
+        <select id="campo-modalidade">
+          <option value="" ${!sugestao.modalidade ? 'selected' : ''}>Não informado</option>
+          <option value="Presencial" ${sugestao.modalidade==='Presencial'?'selected':''}>Presencial</option>
+          <option value="EAD" ${sugestao.modalidade==='EAD'?'selected':''}>EAD</option>
+          <option value="Híbrido" ${sugestao.modalidade==='Híbrido'?'selected':''}>Híbrido</option>
+        </select>
+      </div>
+    </div>
+    <div id="semestres-wrap"></div>
+    <button class="btn-adicionar-linha" id="btn-add-disciplina">+ adicionar disciplina</button><br>
+    <button class="btn-principal" id="btn-confirmar-grade">Confirmar grade e continuar</button>
   `;
+  document.getElementById("etapa-2-conteudo").innerHTML = camposHtml;
+  renderSemestres();
 
+  document.getElementById("btn-add-disciplina").addEventListener("click", () => {
+    const ultimoSemestre = DISCIPLINAS_EDITAVEIS.length ? Math.max(...DISCIPLINAS_EDITAVEIS.map(d => d.semestre)) : 1;
+    DISCIPLINAS_EDITAVEIS.push({ _id: PROX_ID_LINHA++, nome: "", semestre: ultimoSemestre, carga_horaria: null, ementa: "" });
+    renderSemestres();
+  });
+
+  document.getElementById("btn-confirmar-grade").addEventListener("click", confirmarGrade);
+}
+
+function renderSemestres() {
+  const semestres = [...new Set(DISCIPLINAS_EDITAVEIS.map(d => d.semestre))].sort((a, b) => a - b);
+  const wrap = document.getElementById("semestres-wrap");
+  wrap.innerHTML = semestres.map(sem => `
+    <div class="semestre-grupo">
+      <h4>${sem}º Período</h4>
+      ${DISCIPLINAS_EDITAVEIS.filter(d => d.semestre === sem).map(d => `
+        <div class="disciplina-linha" data-id="${d._id}">
+          <input type="text" value="${escapeAttr(d.nome)}" placeholder="Nome da disciplina" data-campo="nome">
+          <input type="number" value="${d.carga_horaria || ''}" placeholder="CH" data-campo="carga_horaria">
+          <button class="btn-remover" data-remover="${d._id}" aria-label="Remover disciplina">×</button>
+        </div>
+      `).join("")}
+    </div>
+  `).join("") || `<div class="empty">Nenhuma disciplina ainda — adicione manualmente abaixo.</div>`;
+
+  wrap.querySelectorAll(".disciplina-linha input").forEach(input => {
+    input.addEventListener("input", e => {
+      const id = Number(e.target.closest(".disciplina-linha").dataset.id);
+      const campo = e.target.dataset.campo;
+      const item = DISCIPLINAS_EDITAVEIS.find(d => d._id === id);
+      if (item) item[campo] = campo === "carga_horaria" ? (e.target.value ? Number(e.target.value) : null) : e.target.value;
+    });
+  });
+  wrap.querySelectorAll("[data-remover]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = Number(btn.dataset.remover);
+      DISCIPLINAS_EDITAVEIS = DISCIPLINAS_EDITAVEIS.filter(d => d._id !== id);
+      renderSemestres();
+    });
+  });
+}
+
+function escapeAttr(str) {
+  return String(str || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+async function confirmarGrade() {
+  const disciplinasValidas = DISCIPLINAS_EDITAVEIS.filter(d => d.nome && d.nome.trim());
+  if (!disciplinasValidas.length) { alert("Adicione ao menos uma disciplina com nome preenchido."); return; }
+
+  const btn = document.getElementById("btn-confirmar-grade");
+  btn.disabled = true; btn.textContent = "Salvando…";
+
+  const payload = {
+    nome_curso: document.getElementById("campo-nome-curso").value || "Curso sem nome",
+    instituicao: document.getElementById("campo-instituicao").value || "Instituição não informada",
+    carga_horaria_total: document.getElementById("campo-ch-total").value ? Number(document.getElementById("campo-ch-total").value) : null,
+    modalidade: document.getElementById("campo-modalidade").value || null,
+    disciplinas: disciplinasValidas.map(({ nome, semestre, carga_horaria, ementa }) => ({ nome, semestre, carga_horaria, ementa })),
+  };
+
+  try {
+    const resp = await fetch(`${API}/api/ppc/confirmar`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+    });
+    if (!resp.ok) throw new Error("Falha ao confirmar");
+    const curso = await resp.json();
+    CURSO_ID = curso.id;
+    marcarConcluido(2);
+    desbloquear(3);
+    carregarDashboard();
+  } catch (err) {
+    btn.disabled = false; btn.textContent = "Confirmar grade e continuar";
+    alert("Não foi possível salvar sua grade agora. Tente novamente.");
+  }
+}
+
+/* ---------------- ETAPA 3: compatibilidade por área ---------------- */
+
+async function carregarDashboard() {
+  const cursos = await fetch(`${API}/api/cursos`).then(r => r.json());
+  const curso = cursos.find(c => c.id === CURSO_ID);
   const dash = await fetch(`${API}/api/cursos/${CURSO_ID}/dashboard`).then(r => r.json());
-  const dashDiv = document.getElementById("dashboard");
-  dashDiv.innerHTML = dash.map(item => `
-    <div class="bar-row" data-area="${item.area}" onclick="selecionarArea('${item.area.replace(/'/g, "\\'")}')">
+
+  const resumo = curso ? `<div class="curso-resumo"><b>${curso.nome}</b> — ${curso.modalidade || "modalidade não informada"} · ${curso.duracao_semestres || "?"} semestres · ${curso.carga_horaria || "?"}h totais</div>` : "";
+
+  const dashHtml = dash.map(item => `
+    <div class="bar-row" tabindex="0" data-area="${escapeAttr(item.area)}">
       <div class="label"><span>${item.area}</span><b>${item.compatibilidade_percentual}%</b></div>
       <div class="bar-track"><div class="bar-fill" style="width:${item.compatibilidade_percentual}%"></div></div>
     </div>
   `).join("");
+
+  document.getElementById("etapa-3-conteudo").innerHTML = resumo + dashHtml;
+
+  document.querySelectorAll(".bar-row").forEach(el => {
+    const ativar = () => selecionarArea(el.dataset.area);
+    el.addEventListener("click", ativar);
+    el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ativar(); } });
+  });
 }
 
+/* ---------------- ETAPA 4: trilha + gap + formações reais ---------------- */
+
 async function selecionarArea(nomeArea) {
-  document.querySelectorAll(".bar-row").forEach(el => {
-    el.classList.toggle("selected", el.dataset.area === nomeArea);
-  });
+  AREA_SELECIONADA = nomeArea;
+  document.querySelectorAll(".bar-row").forEach(el => el.classList.toggle("selecionada", el.dataset.area === nomeArea));
+
+  document.getElementById("etapa-4-eyebrow").textContent = `Destino · ${nomeArea}`;
+  document.getElementById("etapa-4-titulo").textContent = `Sua trilha em ${nomeArea}`;
+  document.getElementById("etapa-4-conteudo").innerHTML = `<div class="empty">Gerando recomendação…</div>`;
+  desbloquear(4);
 
   const areas = await fetch(`${API}/api/areas`).then(r => r.json());
   const area = areas.find(a => a.nome === nomeArea);
   if (!area) return;
 
-  const panel = document.getElementById("recomendacao-panel");
-  panel.style.display = "block";
-  document.getElementById("rec-titulo").textContent = `Trilha: ${area.nome}`;
-  document.getElementById("rec-sub").textContent = "Gerando recomendação…";
-  document.getElementById("rec-conteudo").innerHTML = "";
-
-  const rec = await fetch(`${API}/api/cursos/${CURSO_ID}/recomendacao/${area.id}`).then(r => r.json());
-  const gap = await fetch(`${API}/api/cursos/${CURSO_ID}/gap/${area.id}`).then(r => r.json());
-
-  document.getElementById("rec-sub").innerHTML = `<span class="compat-badge">${rec.compatibilidade_percentual}% de compatibilidade</span>`;
+  const [rec, gap] = await Promise.all([
+    fetch(`${API}/api/cursos/${CURSO_ID}/recomendacao/${area.id}`).then(r => r.json()),
+    fetch(`${API}/api/cursos/${CURSO_ID}/gap/${area.id}`).then(r => r.json()),
+  ]);
 
   const trilhaHtml = rec.trilha_sugerida.length ? `
-    <div class="trilha-wrap">
+    <div class="sub-secao-titulo">Trilha sugerida</div>
+    <div class="trilha-etapas-wrap">
       ${rec.trilha_sugerida.map(e => `
-        <div class="etapa">
+        <div class="sub-etapa">
           <div class="ponto">${e.ordem}</div>
-          <div class="conteudo">
-            <b>${e.conhecimento}</b>
-            ${e.curso_sugerido ? `<span>${e.curso_sugerido}</span>` : ""}
-          </div>
+          <div class="conteudo"><b>${e.conhecimento}</b>${e.curso_sugerido ? `<span>${e.curso_sugerido}</span>` : ""}</div>
         </div>
       `).join("")}
-    </div>
-  ` : `<p class="empty">Ainda não há uma trilha cadastrada para esta área.</p>`;
+    </div>` : "";
 
   const gapHtml = `
-    <div class="grid-2" style="margin-top:22px;">
+    <div class="sub-secao-titulo">O que você já cobre e o que falta</div>
+    <div class="grid-2">
       <div>
-        <h2 style="margin-bottom:8px;">Você já domina</h2>
-        ${gap.disciplinas_ja_cursadas.length
-          ? `<ul class="simples">${gap.disciplinas_ja_cursadas.map(d => `<li>${d}</li>`).join("")}</ul>`
-          : `<p class="empty">Nenhuma disciplina cursada relacionada ainda.</p>`}
+        <div style="font-size:12.5px; font-weight:600; margin-bottom:6px; color:var(--trail);">Você já domina</div>
+        ${gap.disciplinas_ja_cursadas.length ? `<ul class="simples">${gap.disciplinas_ja_cursadas.map(d => `<li>${d}</li>`).join("")}</ul>` : `<p class="empty">Nenhuma disciplina relacionada ainda.</p>`}
       </div>
       <div>
-        <h2 style="margin-bottom:8px;">Recomenda-se aprofundar</h2>
-        ${gap.disciplinas_recomendadas.length
-          ? `<ul class="simples">${gap.disciplinas_recomendadas.map(d => `<li>${d}</li>`).join("")}</ul>`
-          : `<p class="empty">Você já cobre todo o conteúdo mapeado para esta área.</p>`}
+        <div style="font-size:12.5px; font-weight:600; margin-bottom:6px; color:var(--waypoint);">Recomenda-se aprofundar</div>
+        ${gap.disciplinas_recomendadas.length ? `<ul class="simples">${gap.disciplinas_recomendadas.map(d => `<li>${d}</li>`).join("")}</ul>` : `<p class="empty">Você já cobre todo o conteúdo mapeado.</p>`}
       </div>
-    </div>
-  `;
+    </div>`;
 
-  const cursosHtml = rec.cursos_complementares.length ? `
-    <h2 style="margin-top:22px; margin-bottom:8px;">Cursos complementares</h2>
-    <ul class="simples">
-      ${rec.cursos_complementares.map(c => `<li>${c.nome} — ${c.instituicao || ""} (${c.modalidade || ""}, ${c.carga_horaria || "?"}h)</li>`).join("")}
-    </ul>` : "";
+  const complementaresHtml = rec.cursos_complementares.length ? `
+    <div class="sub-secao-titulo">Cursos complementares cadastrados</div>
+    <ul class="simples">${rec.cursos_complementares.map(c => `<li>${c.nome} — ${c.instituicao || ""} (${c.modalidade || ""}, ${c.carga_horaria || "?"}h)</li>`).join("")}</ul>` : "";
 
   const posHtml = rec.pos_graduacoes.length ? `
-    <h2 style="margin-top:22px; margin-bottom:8px;">Pós-graduação compatível</h2>
-    <ul class="simples">
-      ${rec.pos_graduacoes.map(p => `<li>${p.nome} (${p.tipo || ""}) — ${p.instituicao || ""}</li>`).join("")}
-    </ul>` : "";
+    <div class="sub-secao-titulo">Pós-graduação cadastrada</div>
+    <ul class="simples">${rec.pos_graduacoes.map(p => `<li>${p.nome} (${p.tipo || ""}) — ${p.instituicao || ""}</li>`).join("")}</ul>` : "";
 
-  document.getElementById("rec-conteudo").innerHTML =
-    trilhaHtml + gapHtml + cursosHtml + posHtml +
-    `<div class="justificativa">${rec.justificativa}</div>`;
+  document.getElementById("etapa-4-conteudo").innerHTML = `
+    <span class="compat-badge">${rec.compatibilidade_percentual}% de compatibilidade</span>
+    ${trilhaHtml}
+    ${gapHtml}
+    ${complementaresHtml}
+    ${posHtml}
+    <div class="justificativa">${rec.justificativa}</div>
+    <div class="sub-secao-titulo">Formações reais agora</div>
+    <div class="formacoes-header">
+      <div class="disclaimer-busca" style="margin:0;">Busca ao vivo na web — pode levar alguns segundos.</div>
+      <div class="estado-filtro">
+        <input type="text" id="input-uf" maxlength="2" placeholder="UF">
+        <button id="btn-buscar-formacoes">Buscar</button>
+      </div>
+    </div>
+    <div id="formacoes-resultado"></div>
+  `;
+  atualizarProgressoTrilha();
 
-  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  document.getElementById("btn-buscar-formacoes").addEventListener("click", () => buscarFormacoesReais(area.id, area.nome));
+  buscarFormacoesReais(area.id, area.nome);
 }
 
-init();
+async function buscarFormacoesReais(areaId, areaNome) {
+  const container = document.getElementById("formacoes-resultado");
+  container.innerHTML = `<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>`;
+
+  const uf = (document.getElementById("input-uf").value || "").trim().toUpperCase();
+  const url = `${API}/api/cursos/${CURSO_ID}/formacoes-reais/${areaId}${uf ? `?estado=${encodeURIComponent(uf)}` : ""}`;
+
+  try {
+    const dados = await fetch(url).then(r => r.json());
+
+    if (dados.erro && !dados.formacoes.length) {
+      container.innerHTML = `<div class="erro-busca">${dados.erro}<button id="btn-tentar-de-novo">Tentar de novo</button></div>`;
+      document.getElementById("btn-tentar-de-novo").addEventListener("click", () => buscarFormacoesReais(areaId, areaNome));
+      return;
+    }
+
+    const categorias = [
+      { chave: "graduacao", titulo: "Graduação" },
+      { chave: "curso_livre", titulo: "Cursos livres e complementares" },
+      { chave: "pos_graduacao", titulo: "Pós-graduação" },
+    ];
+
+    let html = `<div class="disclaimer-busca">Resultados de uma busca automática — confira sempre o edital oficial antes de se inscrever.</div>`;
+
+    categorias.forEach(cat => {
+      const itens = dados.formacoes.filter(f => f.tipo === cat.chave);
+      html += `<div class="formacao-categoria-titulo">${cat.titulo}</div>`;
+      if (!itens.length) {
+        html += `<p class="empty">Nenhum resultado encontrado agora nesta categoria.</p>`;
+      } else {
+        html += itens.map(f => `
+          <div class="formacao-card">
+            <div class="f-titulo">${f.titulo}</div>
+            <div class="f-meta">
+              ${f.instituicao_provavel ? `<span class="badge">${f.instituicao_provavel}</span>` : ""}
+              ${f.modalidade ? `<span class="badge">${f.modalidade}</span>` : ""}
+              ${f.periodo_inscricao ? `<span class="badge periodo">${f.periodo_inscricao}</span>` : `<span class="badge sem-periodo">Confira o período no site oficial</span>`}
+            </div>
+            ${f.resumo ? `<div class="f-resumo">${f.resumo}</div>` : ""}
+            <a href="${f.fonte_url}" target="_blank" rel="noopener noreferrer">Ver fonte →</a>
+          </div>
+        `).join("");
+      }
+    });
+
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<div class="erro-busca">Não foi possível buscar agora. Verifique sua conexão e tente de novo.<button id="btn-tentar-de-novo">Tentar de novo</button></div>`;
+    document.getElementById("btn-tentar-de-novo").addEventListener("click", () => buscarFormacoesReais(areaId, areaNome));
+  }
+}
+
+atualizarProgressoTrilha();
 </script>
 
 </body>

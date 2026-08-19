@@ -1,11 +1,13 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import os
 
-from . import models, schemas, recommendation, seed
+from . import models, schemas, recommendation, seed, ppc_parser, web_search
+from .area_classifier import classificar_disciplina, areas_relevantes_para_curso
+from .area_data import AREA_DEFINICOES
 from .database import Base, engine, get_db
 
 Base.metadata.create_all(bind=engine)
@@ -105,6 +107,124 @@ def dashboard(curso_id: int, db: Session = Depends(get_db)):
         resultado.append({"area": area.nome, "compatibilidade_percentual": percentual})
     resultado.sort(key=lambda x: x["compatibilidade_percentual"], reverse=True)
     return resultado
+
+
+def _get_or_create_area(db: Session, nome: str) -> models.Area:
+    """
+    Garante que a área exista no banco. Como AREAS já é semeado a partir de
+    AREA_DEFINICOES (mesma fonte usada pelo classificador), isso normalmente
+    só busca — o create é uma rede de segurança para áreas adicionadas depois.
+    """
+    area = db.query(models.Area).filter(models.Area.nome == nome).first()
+    if area:
+        return area
+    definicao = AREA_DEFINICOES.get(nome, {"descricao": "", "pontos_ideais": 10})
+    area = models.Area(nome=nome, descricao=definicao.get("descricao"), pontos_ideais=definicao.get("pontos_ideais", 10))
+    db.add(area)
+    db.flush()
+    return area
+
+
+@app.post("/api/ppc/analisar", response_model=schemas.PPCAnaliseOut, tags=["PPC"])
+async def analisar_ppc(arquivo: UploadFile = File(...)):
+    """
+    Recebe o PPC real (PDF) enviado pelo usuário e devolve uma PRÉVIA da
+    extração — curso sugerido + disciplinas por semestre + áreas relevantes.
+    Nada é salvo no banco aqui; o usuário revisa/corrige e confirma em
+    /api/ppc/confirmar (seção 28: importação automática de PPC).
+    """
+    if arquivo.content_type not in ("application/pdf", "application/octet-stream") and not arquivo.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Envie o PPC em formato PDF.")
+
+    conteudo = await arquivo.read()
+    if not conteudo:
+        raise HTTPException(status_code=400, detail="Arquivo vazio.")
+
+    try:
+        analise = ppc_parser.analisar_ppc(conteudo)
+    except Exception:
+        raise HTTPException(
+            status_code=422,
+            detail="Não foi possível ler este PDF. Verifique se o arquivo não está corrompido ou protegido.",
+        )
+
+    areas_relevantes = sorted(areas_relevantes_para_curso(analise["disciplinas"]))
+
+    return schemas.PPCAnaliseOut(
+        metodo_extracao=analise["metodo_extracao"],
+        avisos=analise["avisos"],
+        curso_sugerido=schemas.CursoSugeridoOut(**analise["curso_sugerido"]),
+        disciplinas=[schemas.DisciplinaExtraidaIn(**d) for d in analise["disciplinas"]],
+        areas_relevantes=areas_relevantes,
+    )
+
+
+@app.post("/api/ppc/confirmar", response_model=schemas.CursoOut, tags=["PPC"])
+def confirmar_ppc(dados: schemas.PPCConfirmarIn, db: Session = Depends(get_db)):
+    """
+    Persiste o curso + disciplinas que o usuário revisou/editou na etapa
+    anterior, classificando cada disciplina por área automaticamente
+    (area_classifier) já que não existe curadoria manual para um PPC real.
+    """
+    if not dados.disciplinas:
+        raise HTTPException(status_code=400, detail="Adicione ao menos uma disciplina antes de confirmar.")
+
+    inst = models.Instituicao(nome=dados.instituicao or "Instituição não informada")
+    db.add(inst)
+    db.flush()
+
+    curso = models.Curso(
+        nome=dados.nome_curso,
+        instituicao_id=inst.id,
+        carga_horaria=dados.carga_horaria_total,
+        duracao_semestres=max((d.semestre for d in dados.disciplinas), default=1),
+        modalidade=dados.modalidade,
+        origem="ppc_upload",
+    )
+    db.add(curso)
+    db.flush()
+
+    for d in dados.disciplinas:
+        disciplina = models.Disciplina(
+            nome=d.nome, semestre=d.semestre, carga_horaria=d.carga_horaria,
+            ementa=d.ementa, curso_id=curso.id,
+        )
+        db.add(disciplina)
+        db.flush()
+
+        for area_nome, peso in classificar_disciplina(d.nome, d.ementa or ""):
+            area = _get_or_create_area(db, area_nome)
+            db.execute(
+                models.disciplina_area.insert().values(
+                    disciplina_id=disciplina.id, area_id=area.id, peso=peso
+                )
+            )
+
+    db.commit()
+    db.refresh(curso)
+    return curso
+
+
+@app.get("/api/cursos/{curso_id}/formacoes-reais/{area_id}", response_model=schemas.FormacoesReaisOut, tags=["Formações reais"])
+def formacoes_reais(
+    curso_id: int,
+    area_id: int,
+    estado: Optional[str] = Query(None, description="UF para localizar melhor os resultados, ex: DF"),
+    db: Session = Depends(get_db),
+):
+    """
+    Busca AO VIVO na web (não é dado cadastrado no banco) por formações reais
+    ligadas à área de interesse: graduação, cursos livres e pós-graduação,
+    com instituição, modalidade e período de inscrição quando encontrados —
+    sempre citando a fonte, já que a extração de texto livre pode falhar.
+    """
+    area = db.query(models.Area).filter(models.Area.id == area_id).first()
+    curso = db.query(models.Curso).filter(models.Curso.id == curso_id).first()
+    if not area or not curso:
+        raise HTTPException(status_code=404, detail="Curso ou área não encontrados.")
+
+    resultado = web_search.buscar_formacoes_reais(area.nome, estado)
+    return schemas.FormacoesReaisOut(**resultado)
 
 
 @app.post("/api/usuarios", response_model=schemas.UsuarioOut, tags=["Usuários"])

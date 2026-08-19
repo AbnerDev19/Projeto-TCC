@@ -26,6 +26,7 @@ class CursoOut(BaseModel):
     carga_horaria: Optional[int] = None
     duracao_semestres: Optional[int] = None
     modalidade: Optional[str] = None
+    origem: Optional[str] = None
 
 
 class CursoComplementarOut(BaseModel):
@@ -90,3 +91,62 @@ class RecomendacaoOut(BaseModel):
     cursos_complementares: List[CursoComplementarOut] = []
     pos_graduacoes: List[PosGraduacaoOut] = []
     justificativa: str
+
+
+# ---------------------------------------------------------------------------
+# Upload e análise de PPC real (PDF) — seção 28
+# ---------------------------------------------------------------------------
+
+class DisciplinaExtraidaIn(BaseModel):
+    """Uma disciplina extraída (ou editada manualmente) na etapa de revisão."""
+    nome: str
+    semestre: int
+    carga_horaria: Optional[int] = None
+    ementa: Optional[str] = None
+
+
+class CursoSugeridoOut(BaseModel):
+    nome_curso: Optional[str] = None
+    instituicao: Optional[str] = None
+    carga_horaria_total: Optional[int] = None
+    modalidade: Optional[str] = None
+
+
+class PPCAnaliseOut(BaseModel):
+    """Resposta de /api/ppc/analisar — uma prévia, nada é salvo ainda."""
+    metodo_extracao: str
+    avisos: List[str] = []
+    curso_sugerido: CursoSugeridoOut
+    disciplinas: List[DisciplinaExtraidaIn]
+    areas_relevantes: List[str] = []
+
+
+class PPCConfirmarIn(BaseModel):
+    """Corpo de /api/ppc/confirmar — o que o usuário revisou/editou na tela."""
+    nome_curso: str
+    instituicao: Optional[str] = "Instituição não informada"
+    carga_horaria_total: Optional[int] = None
+    modalidade: Optional[str] = None
+    disciplinas: List[DisciplinaExtraidaIn]
+
+
+# ---------------------------------------------------------------------------
+# Formações reais (busca ao vivo) — pedido do usuário: cursos reais,
+# onde fazer, período de inscrição
+# ---------------------------------------------------------------------------
+
+class FormacaoRealOut(BaseModel):
+    tipo: str  # graduacao | curso_livre | pos_graduacao
+    titulo: str
+    instituicao_provavel: Optional[str] = None
+    modalidade: Optional[str] = None
+    periodo_inscricao: Optional[str] = None
+    resumo: Optional[str] = None
+    fonte_url: str
+
+
+class FormacoesReaisOut(BaseModel):
+    area: str
+    estado: Optional[str] = None
+    formacoes: List[FormacaoRealOut] = []
+    erro: Optional[str] = None

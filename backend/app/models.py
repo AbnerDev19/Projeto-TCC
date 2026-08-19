@@ -38,6 +38,8 @@ class Curso(Base):
     carga_horaria = Column(Integer)
     duracao_semestres = Column(Integer)
     modalidade = Column(String)
+    # "ppc_upload" (extraído automaticamente de um PDF real) ou "demonstracao"
+    origem = Column(String, default="demonstracao")
 
     instituicao = relationship("Instituicao", back_populates="cursos")
     disciplinas = relationship("Disciplina", back_populates="curso")
