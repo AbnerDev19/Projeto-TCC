@@ -13,6 +13,7 @@ o nome da disciplina (peso maior) e a ementa (peso menor), com o texto
 normalizado (sem acento, minúsculo) para tolerar variações de digitação
 comuns em PDFs de PPC.
 """
+import re
 import unicodedata
 from typing import Iterable, List, Tuple
 
@@ -26,6 +27,20 @@ def _normalizar(texto: str) -> str:
     nfkd = unicodedata.normalize("NFKD", texto)
     sem_acento = "".join(c for c in nfkd if not unicodedata.combining(c))
     return sem_acento.lower()
+
+
+def _contem_termo(termo_norm: str, texto_norm: str) -> bool:
+    """
+    Verifica se `termo_norm` aparece em `texto_norm` como palavra (ou
+    sequência de palavras) inteira, não como substring solta — sem isso,
+    palavras-chave curtas como "ux" ou "ia" combinariam por acidente dentro
+    de palavras não relacionadas (ex: "ux" dentro de "fluxograma" não deve
+    contar como sinal de Design).
+    """
+    if not termo_norm or not texto_norm:
+        return False
+    padrao = r"(?<![a-z0-9])" + re.escape(termo_norm) + r"(?![a-z0-9])"
+    return re.search(padrao, texto_norm) is not None
 
 
 def classificar_disciplina(nome: str, ementa: str = "") -> List[Tuple[str, int]]:
@@ -47,9 +62,9 @@ def classificar_disciplina(nome: str, ementa: str = "") -> List[Tuple[str, int]]
         pontuacao = 0
         for termo in definicao["keywords"]:
             termo_norm = _normalizar(termo)
-            if termo_norm in nome_norm:
+            if _contem_termo(termo_norm, nome_norm):
                 pontuacao += 3  # bate no título da disciplina: sinal forte
-            elif termo_norm in ementa_norm:
+            elif _contem_termo(termo_norm, ementa_norm):
                 pontuacao += 1  # bate só na ementa: sinal fraco
 
         if pontuacao <= 0:

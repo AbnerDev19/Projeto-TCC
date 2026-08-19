@@ -16,6 +16,7 @@ class DisciplinaOut(BaseModel):
     semestre: int
     carga_horaria: Optional[int] = None
     ementa: Optional[str] = None
+    concluida: bool = False
     areas: List[AreaOut] = []
 
 
@@ -103,6 +104,10 @@ class DisciplinaExtraidaIn(BaseModel):
     semestre: int
     carga_horaria: Optional[int] = None
     ementa: Optional[str] = None
+    # Sinal de confiança da extração automática (seção 28) — usado só na
+    # prévia, para destacar na tela de revisão os itens que merecem mais
+    # atenção. Não tem efeito quando usado como entrada de /api/ppc/confirmar.
+    confianca: bool = True
 
 
 class CursoSugeridoOut(BaseModel):
@@ -150,3 +155,34 @@ class FormacoesReaisOut(BaseModel):
     estado: Optional[str] = None
     formacoes: List[FormacaoRealOut] = []
     erro: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Disciplinas em cards: marcar concluída + cursos gratuitos por matéria
+# ---------------------------------------------------------------------------
+
+class DisciplinaConcluidaIn(BaseModel):
+    concluida: bool
+
+
+class CursoGratuitoOut(BaseModel):
+    nome: str
+    plataforma: str
+    url: str
+    descricao: str
+
+
+# ---------------------------------------------------------------------------
+# Árvore de trilha pós-formação (ramificações por área -> pós-graduação)
+# ---------------------------------------------------------------------------
+
+class ArvoreRamoOut(BaseModel):
+    area: AreaOut
+    compatibilidade_percentual: float
+    pos_graduacoes: List[PosGraduacaoOut] = []
+    cursos_gratuitos: List[CursoGratuitoOut] = []
+
+
+class ArvoreOut(BaseModel):
+    curso: CursoOut
+    ramos: List[ArvoreRamoOut] = []

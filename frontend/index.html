@@ -211,6 +211,28 @@
   .dropzone .sub-drop { color: var(--ink-soft); font-size: 12.5px; margin-top: 4px; }
   input[type=file] { display: none; }
 
+  /* ---------- Painel "analisando" (etapa 1) ---------- */
+  .analisando-painel {
+    display: none;
+    align-items: center;
+    flex-direction: column;
+    padding: 36px 20px;
+    text-align: center;
+  }
+  .analisando-painel.ativo { display: flex; }
+  .spinner {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 3px solid var(--line); border-top-color: var(--waypoint);
+    animation: girar .8s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  .analisando-texto { font-weight: 700; font-size: 14.5px; }
+  .analisando-sub {
+    color: var(--ink-soft); font-size: 12.5px; margin-top: 6px; min-height: 16px;
+    font-family: var(--font-mono);
+  }
+
   .demo-link {
     display: inline-block; margin-top: 14px; font-size: 13px;
     color: var(--water); text-decoration: underline; text-underline-offset: 3px;
@@ -254,7 +276,7 @@
     letter-spacing: .06em; color: var(--water); margin: 0 0 8px;
   }
   .disciplina-linha {
-    display: grid; grid-template-columns: 1fr 90px 34px; gap: 8px;
+    display: grid; grid-template-columns: 18px 1fr 90px 34px; gap: 8px;
     margin-bottom: 7px; align-items: center;
   }
   .disciplina-linha input {
@@ -262,6 +284,7 @@
     font-size: 13.5px; font-family: var(--font-body); background: #fff; color: var(--ink);
   }
   .disciplina-linha input[type=number] { font-family: var(--font-mono); text-align: center; }
+  .confianca-flag { color: var(--waypoint); font-size: 14px; cursor: help; text-align: center; }
   .btn-remover {
     width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--line);
     background: #fff; color: var(--danger); cursor: pointer; font-size: 15px; line-height: 1;
@@ -292,38 +315,83 @@
   }
   .btn-secundario:hover { background: var(--water-soft); }
 
-  /* ---------- Compatibilidade (etapa 3) ---------- */
+  /* ---------- Disciplinas em cards (etapa 3) ---------- */
   .curso-resumo { font-size: 13px; color: var(--ink-soft); margin-bottom: 16px; }
   .curso-resumo b { color: var(--ink); }
 
-  .bar-row {
-    display: flex; align-items: center; gap: 14px; margin: 9px 0;
-    cursor: pointer; padding: 4px; border-radius: 8px; transition: background .15s ease;
+  .disciplinas-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
   }
-  .bar-row:hover { background: rgba(111,131,84,.08); }
-  .bar-row .label {
-    width: 172px; flex-shrink: 0; font-size: 13px;
-    display: flex; justify-content: space-between; gap: 8px;
-  }
-  .bar-row .label b { font-family: var(--font-mono); font-weight: 500; color: var(--ink-soft); }
-  .bar-track {
-    flex: 1; height: 9px; background: rgba(35,46,39,.07);
-    border-radius: 6px; overflow: hidden;
-  }
-  .bar-fill {
-    height: 100%; background: var(--trail-soft); border-radius: 6px;
-    transition: width .7s cubic-bezier(.4,0,.2,1);
-  }
-  .bar-row.selecionada { background: var(--waypoint-soft); }
-  .bar-row.selecionada .label { font-weight: 700; color: var(--waypoint); }
-  .bar-row.selecionada .bar-fill { background: var(--waypoint); }
+  @media (max-width: 640px) { .disciplinas-grid { grid-template-columns: 1fr; } }
 
-  /* ---------- Trilha recomendada + gap (etapa 4) ---------- */
+  .disciplina-card {
+    border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;
+    transition: border-color .2s ease, background .2s ease;
+  }
+  .disciplina-card.concluida { border-color: var(--trail); background: #F6FAF1; }
+
+  .card-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .card-nome { font-weight: 700; font-size: 14.5px; line-height: 1.35; }
+  .card-ementa { font-size: 12.5px; color: var(--ink-soft); line-height: 1.55; }
+  .card-ementa.vazia { font-style: italic; color: var(--ink-faint); }
+
+  .check-concluida {
+    display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; padding-top: 8px; border-top: 1px dashed var(--line);
+    color: var(--ink-soft);
+  }
+  .check-concluida input { width: 15px; height: 15px; accent-color: var(--trail); cursor: pointer; }
+  .disciplina-card.concluida .check-concluida { color: var(--trail); }
+
+  .gratuitos-mini-titulo {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--ink-faint); font-family: var(--font-mono); margin: 2px 0 6px;
+  }
+  .gratuito-chip {
+    display: block; padding: 8px 10px; border-radius: 8px; background: var(--water-soft);
+    margin-bottom: 6px; text-decoration: none;
+  }
+  .gratuito-chip:hover { background: #CBE0DE; }
+  .gratuito-chip .g-nome { font-size: 12px; font-weight: 700; color: var(--water); }
+  .gratuito-chip .g-plat { font-size: 10.5px; color: var(--ink-faint); font-family: var(--font-mono); margin-left: 4px; }
+  .gratuito-chip .g-desc { font-size: 11.5px; color: var(--ink-soft); margin-top: 3px; line-height: 1.45; }
+
+  .btn-continuar-wrap { text-align: center; margin-top: 6px; }
+
+  /* ---------- Árvore de trilha pós-formação (etapa 4) ---------- */
+  .arvore-raiz {
+    border: 2px solid var(--trail); border-radius: 12px; padding: 16px 18px;
+    background: #F6FAF1; margin-bottom: 20px; text-align: center;
+  }
+  .arvore-raiz .raiz-label {
+    font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--trail);
+  }
+  .arvore-raiz .raiz-nome { font-family: var(--font-display); font-weight: 600; font-size: 17px; margin-top: 4px; }
+  .arvore-raiz .raiz-meta { font-size: 12px; color: var(--ink-soft); margin-top: 3px; }
+
+  .arvore-intro { font-size: 12.5px; color: var(--ink-soft); margin: 0 0 14px; text-align: center; }
+
+  .ramo { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+  .ramo-cabeca {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 14px 16px; cursor: pointer; background: #fff; user-select: none;
+  }
+  .ramo-cabeca:hover { background: var(--waypoint-soft); }
+  .ramo-titulo-linha { display: flex; align-items: center; gap: 10px; }
+  .ramo-nome { font-weight: 700; font-size: 14.5px; }
+  .ramo-seta { transition: transform .25s ease; color: var(--ink-faint); flex-shrink: 0; }
+  .ramo.aberto .ramo-seta { transform: rotate(90deg); }
+  .ramo-corpo { display: none; padding: 6px 18px 20px; border-top: 1px dashed var(--line); background: #FDFCF6; }
+  .ramo.aberto .ramo-corpo { display: block; }
+
   .compat-badge {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 13px; border-radius: 20px; font-family: var(--font-mono);
-    font-size: 12.5px; font-weight: 500; background: var(--waypoint-soft);
-    border: 1px solid var(--waypoint); color: #7A5116; margin-bottom: 18px;
+    padding: 3px 11px; border-radius: 20px; font-family: var(--font-mono);
+    font-size: 11.5px; font-weight: 500; background: var(--waypoint-soft);
+    border: 1px solid var(--waypoint); color: #7A5116; flex-shrink: 0;
   }
 
   .sub-secao-titulo {
@@ -435,7 +503,7 @@
 <header>
   <div class="eyebrow">Da grade curricular ao próximo passo real</div>
   <h1>Trilha <em>Acadêmica</em></h1>
-  <p>Envie o PPC real do seu curso e descubra, área por área, o que sua grade já cobre — e quais formações reais existem hoje para você seguir a partir daqui.</p>
+  <p>Envie o PPC real do seu curso: veja suas disciplinas em cards, marque o que já concluiu, encontre cursos gratuitos por matéria e explore os caminhos possíveis depois da formação.</p>
 </header>
 
 <main>
@@ -456,6 +524,11 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
               <div class="titulo-drop" id="dropzone-titulo">Arraste o PDF aqui ou clique para escolher</div>
               <div class="sub-drop">Só o texto do documento — nada é enviado a terceiros</div>
+            </div>
+            <div class="analisando-painel" id="analisando-painel">
+              <div class="spinner"></div>
+              <div class="analisando-texto">Analisando seu PPC…</div>
+              <div class="analisando-sub" id="analisando-sub">Lendo o PDF…</div>
             </div>
             <input type="file" id="input-arquivo" accept="application/pdf">
             <ul class="aviso-lista" id="avisos-lista" style="display:none;"></ul>
@@ -486,12 +559,12 @@
     <div class="etapa-principal bloqueado" id="etapa-3">
       <div class="marcador">03</div>
       <div class="etapa-corpo">
-        <div class="etapa-eyebrow">Diagnóstico</div>
-        <h2 class="etapa-titulo">Sua compatibilidade por área</h2>
-        <p class="etapa-desc">Calculado a partir das disciplinas da sua grade. Escolha uma área para gerar sua trilha.</p>
+        <div class="etapa-eyebrow">Sua grade, disciplina por disciplina</div>
+        <h2 class="etapa-titulo">Suas disciplinas</h2>
+        <p class="etapa-desc">Marque o que você já concluiu e veja cursos gratuitos relacionados a cada matéria.</p>
         <div class="cartao">
           <div class="cartao-interior" id="etapa-3-conteudo">
-            <div class="empty">Confirme sua grade na etapa anterior para ver a compatibilidade.</div>
+            <div class="empty">Confirme sua grade na etapa anterior para ver suas disciplinas aqui.</div>
           </div>
         </div>
       </div>
@@ -501,12 +574,12 @@
     <div class="etapa-principal bloqueado" id="etapa-4">
       <div class="marcador">04</div>
       <div class="etapa-corpo">
-        <div class="etapa-eyebrow" id="etapa-4-eyebrow">Destino</div>
-        <h2 class="etapa-titulo" id="etapa-4-titulo">Sua trilha</h2>
-        <p class="etapa-desc">O que você já domina, o que falta, e formações reais — buscadas ao vivo — para seguir em frente.</p>
+        <div class="etapa-eyebrow">Ramificações</div>
+        <h2 class="etapa-titulo">Sua trilha depois da formação</h2>
+        <p class="etapa-desc">Cada ramo é um caminho possível. Explore quantos quiser — especialização, mestrado, cursos gratuitos e formações reais buscadas ao vivo.</p>
         <div class="cartao">
           <div class="cartao-interior" id="etapa-4-conteudo">
-            <div class="empty">Escolha uma área na etapa anterior para gerar sua trilha.</div>
+            <div class="empty">Veja suas disciplinas na etapa anterior para gerar sua árvore de trilha.</div>
           </div>
         </div>
       </div>
@@ -520,7 +593,6 @@
 <script>
 const API = "";
 let CURSO_ID = null;
-let AREA_SELECIONADA = null;
 let PREVIA_PPC = null;      // resposta crua de /api/ppc/analisar
 let DISCIPLINAS_EDITAVEIS = []; // estado editável da etapa 2
 let PROX_ID_LINHA = 1;
@@ -570,13 +642,31 @@ inputArquivo.addEventListener("change", () => {
   if (inputArquivo.files[0]) enviarPPC(inputArquivo.files[0]);
 });
 
+const LOADING_STATUS = [
+  "Lendo o PDF…",
+  "Procurando a matriz curricular…",
+  "Identificando períodos e disciplinas…",
+  "Procurando um ementário no documento…",
+  "Organizando sua grade…",
+];
+
 async function enviarPPC(arquivo) {
   if (!arquivo.name.toLowerCase().endsWith(".pdf")) {
     alert("Envie o PPC em formato PDF.");
     return;
   }
-  document.getElementById("dropzone-titulo").textContent = `Lendo ${arquivo.name}…`;
+
+  dropzone.style.display = "none";
   document.getElementById("avisos-lista").style.display = "none";
+  const painel = document.getElementById("analisando-painel");
+  const sub = document.getElementById("analisando-sub");
+  painel.classList.add("ativo");
+  let passo = 0;
+  sub.textContent = LOADING_STATUS[0];
+  const intervalo = setInterval(() => {
+    passo = (passo + 1) % LOADING_STATUS.length;
+    sub.textContent = LOADING_STATUS[passo];
+  }, 1100);
 
   const formData = new FormData();
   formData.append("arquivo", arquivo);
@@ -586,6 +676,9 @@ async function enviarPPC(arquivo) {
     if (!resp.ok) throw new Error("Falha na análise");
     PREVIA_PPC = await resp.json();
 
+    clearInterval(intervalo);
+    painel.classList.remove("ativo");
+    dropzone.style.display = "";
     document.getElementById("dropzone-titulo").textContent = `✓ ${arquivo.name} — ${PREVIA_PPC.disciplinas.length} disciplina(s) encontrada(s)`;
 
     if (PREVIA_PPC.avisos.length) {
@@ -599,6 +692,9 @@ async function enviarPPC(arquivo) {
     renderEtapa2();
     desbloquear(2);
   } catch (err) {
+    clearInterval(intervalo);
+    painel.classList.remove("ativo");
+    dropzone.style.display = "";
     document.getElementById("dropzone-titulo").textContent = "Não consegui ler esse PDF — tente novamente ou escolha outro arquivo";
   }
 }
@@ -613,7 +709,7 @@ document.getElementById("btn-demo").addEventListener("click", async () => {
   document.getElementById("etapa-2-conteudo").innerHTML = `<div class="empty">Etapa pulada — usando dados de demonstração já cadastrados.</div>`;
   marcarConcluido(2);
   desbloquear(3);
-  carregarDashboard();
+  carregarDisciplinasCards();
 });
 
 /* ---------------- ETAPA 2: revisão da grade extraída ---------------- */
@@ -643,7 +739,7 @@ function renderEtapa2() {
 
   document.getElementById("btn-add-disciplina").addEventListener("click", () => {
     const ultimoSemestre = DISCIPLINAS_EDITAVEIS.length ? Math.max(...DISCIPLINAS_EDITAVEIS.map(d => d.semestre)) : 1;
-    DISCIPLINAS_EDITAVEIS.push({ _id: PROX_ID_LINHA++, nome: "", semestre: ultimoSemestre, carga_horaria: null, ementa: "" });
+    DISCIPLINAS_EDITAVEIS.push({ _id: PROX_ID_LINHA++, nome: "", semestre: ultimoSemestre, carga_horaria: null, ementa: "", confianca: true });
     renderSemestres();
   });
 
@@ -658,6 +754,7 @@ function renderSemestres() {
       <h4>${sem}º Período</h4>
       ${DISCIPLINAS_EDITAVEIS.filter(d => d.semestre === sem).map(d => `
         <div class="disciplina-linha" data-id="${d._id}">
+          <span class="confianca-flag" ${d.confianca === false ? '' : 'style="visibility:hidden;"'} title="Extração menos confiável — confira este item">⚠</span>
           <input type="text" value="${escapeAttr(d.nome)}" placeholder="Nome da disciplina" data-campo="nome">
           <input type="number" value="${d.carga_horaria || ''}" placeholder="CH" data-campo="carga_horaria">
           <button class="btn-remover" data-remover="${d._id}" aria-label="Remover disciplina">×</button>
@@ -711,126 +808,222 @@ async function confirmarGrade() {
     CURSO_ID = curso.id;
     marcarConcluido(2);
     desbloquear(3);
-    carregarDashboard();
+    carregarDisciplinasCards();
   } catch (err) {
     btn.disabled = false; btn.textContent = "Confirmar grade e continuar";
     alert("Não foi possível salvar sua grade agora. Tente novamente.");
   }
 }
 
-/* ---------------- ETAPA 3: compatibilidade por área ---------------- */
+/* ---------------- ETAPA 3: disciplinas em cards ---------------- */
 
-async function carregarDashboard() {
+const CACHE_CURSOS_GRATUITOS = {}; // area_id -> array de cursos gratuitos
+
+async function carregarDisciplinasCards() {
+  document.getElementById("etapa-3-conteudo").innerHTML = `<div class="empty">Carregando suas disciplinas…</div>`;
+
   const cursos = await fetch(`${API}/api/cursos`).then(r => r.json());
   const curso = cursos.find(c => c.id === CURSO_ID);
-  const dash = await fetch(`${API}/api/cursos/${CURSO_ID}/dashboard`).then(r => r.json());
+  const disciplinas = await fetch(`${API}/api/cursos/${CURSO_ID}/disciplinas`).then(r => r.json());
+
+  // busca (uma vez por área, com cache) os cursos gratuitos de cada área tocada pelas disciplinas
+  const areaIds = [...new Set(disciplinas.flatMap(d => d.areas.map(a => a.id)))];
+  await Promise.all(areaIds.map(async id => {
+    if (CACHE_CURSOS_GRATUITOS[id]) return;
+    CACHE_CURSOS_GRATUITOS[id] = await fetch(`${API}/api/areas/${id}/cursos-gratuitos`).then(r => r.json());
+  }));
 
   const resumo = curso ? `<div class="curso-resumo"><b>${curso.nome}</b> — ${curso.modalidade || "modalidade não informada"} · ${curso.duracao_semestres || "?"} semestres · ${curso.carga_horaria || "?"}h totais</div>` : "";
 
-  const dashHtml = dash.map(item => `
-    <div class="bar-row" tabindex="0" data-area="${escapeAttr(item.area)}">
-      <div class="label"><span>${item.area}</span><b>${item.compatibilidade_percentual}%</b></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${item.compatibilidade_percentual}%"></div></div>
+  const cardsHtml = disciplinas.map(d => {
+    // até 3 cursos gratuitos únicos, juntando as áreas da disciplina
+    const gratuitos = [];
+    const nomesVistos = new Set();
+    for (const area of d.areas) {
+      for (const c of (CACHE_CURSOS_GRATUITOS[area.id] || [])) {
+        if (nomesVistos.has(c.nome) || gratuitos.length >= 3) continue;
+        nomesVistos.add(c.nome);
+        gratuitos.push(c);
+      }
+    }
+
+    return `
+      <div class="disciplina-card ${d.concluida ? 'concluida' : ''}" data-disciplina-id="${d.id}">
+        <div class="card-topo">
+          <div class="card-nome">${escapeAttr(d.nome)}</div>
+        </div>
+        <div class="card-badges">
+          <span class="badge">${d.semestre}º período</span>
+          ${d.carga_horaria ? `<span class="badge">${d.carga_horaria}h</span>` : ""}
+          ${d.areas.map(a => `<span class="badge">${escapeAttr(a.nome)}</span>`).join("")}
+        </div>
+        <div class="card-ementa ${d.ementa ? '' : 'vazia'}">${d.ementa ? escapeAttr(d.ementa) : "Ementa não identificada no PPC."}</div>
+        ${gratuitos.length ? `
+          <div>
+            <div class="gratuitos-mini-titulo">Cursos gratuitos relacionados</div>
+            ${gratuitos.map(c => `
+              <a class="gratuito-chip" href="${c.url}" target="_blank" rel="noopener noreferrer">
+                <span class="g-nome">${escapeAttr(c.nome)}</span><span class="g-plat">· ${escapeAttr(c.plataforma)}</span>
+                <div class="g-desc">${escapeAttr(c.descricao)}</div>
+              </a>
+            `).join("")}
+          </div>` : ""}
+        <label class="check-concluida">
+          <input type="checkbox" ${d.concluida ? 'checked' : ''} data-toggle-concluida="${d.id}">
+          Já concluí esta matéria
+        </label>
+      </div>
+    `;
+  }).join("");
+
+  document.getElementById("etapa-3-conteudo").innerHTML = `
+    ${resumo}
+    <div class="disciplinas-grid">${cardsHtml}</div>
+    <div class="btn-continuar-wrap">
+      <button class="btn-principal" id="btn-ver-arvore">Ver árvore de possibilidades →</button>
     </div>
-  `).join("");
+  `;
 
-  document.getElementById("etapa-3-conteudo").innerHTML = resumo + dashHtml;
+  document.querySelectorAll("[data-toggle-concluida]").forEach(input => {
+    input.addEventListener("change", () => toggleConcluida(Number(input.dataset.toggleConcluida), input));
+  });
 
-  document.querySelectorAll(".bar-row").forEach(el => {
-    const ativar = () => selecionarArea(el.dataset.area);
-    el.addEventListener("click", ativar);
-    el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ativar(); } });
+  document.getElementById("btn-ver-arvore").addEventListener("click", () => {
+    marcarConcluido(3);
+    desbloquear(4);
+    carregarArvore();
   });
 }
 
-/* ---------------- ETAPA 4: trilha + gap + formações reais ---------------- */
+async function toggleConcluida(disciplinaId, inputEl) {
+  const card = inputEl.closest(".disciplina-card");
+  try {
+    const resp = await fetch(`${API}/api/disciplinas/${disciplinaId}/concluida`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ concluida: inputEl.checked }),
+    });
+    if (!resp.ok) throw new Error("Falha ao salvar");
+    card.classList.toggle("concluida", inputEl.checked);
+  } catch (err) {
+    inputEl.checked = !inputEl.checked; // desfaz visualmente se a chamada falhar
+    alert("Não foi possível salvar agora. Tente novamente.");
+  }
+}
 
-async function selecionarArea(nomeArea) {
-  AREA_SELECIONADA = nomeArea;
-  document.querySelectorAll(".bar-row").forEach(el => el.classList.toggle("selecionada", el.dataset.area === nomeArea));
+/* ---------------- ETAPA 4: árvore de trilha pós-formação ---------------- */
 
-  document.getElementById("etapa-4-eyebrow").textContent = `Destino · ${nomeArea}`;
-  document.getElementById("etapa-4-titulo").textContent = `Sua trilha em ${nomeArea}`;
-  document.getElementById("etapa-4-conteudo").innerHTML = `<div class="empty">Gerando recomendação…</div>`;
-  desbloquear(4);
+async function carregarArvore() {
+  document.getElementById("etapa-4-conteudo").innerHTML = `<div class="empty">Montando sua árvore de possibilidades…</div>`;
 
-  const areas = await fetch(`${API}/api/areas`).then(r => r.json());
-  const area = areas.find(a => a.nome === nomeArea);
-  if (!area) return;
+  const arvore = await fetch(`${API}/api/cursos/${CURSO_ID}/arvore`).then(r => r.json());
 
-  const [rec, gap] = await Promise.all([
-    fetch(`${API}/api/cursos/${CURSO_ID}/recomendacao/${area.id}`).then(r => r.json()),
-    fetch(`${API}/api/cursos/${CURSO_ID}/gap/${area.id}`).then(r => r.json()),
-  ]);
+  const raizHtml = `
+    <div class="arvore-raiz">
+      <div class="raiz-label">Você está aqui</div>
+      <div class="raiz-nome">${escapeAttr(arvore.curso.nome)}</div>
+      <div class="raiz-meta">${escapeAttr(arvore.curso.modalidade || "Modalidade não informada")} · ${arvore.curso.duracao_semestres || "?"} semestres</div>
+    </div>
+  `;
 
-  const trilhaHtml = rec.trilha_sugerida.length ? `
-    <div class="sub-secao-titulo">Trilha sugerida</div>
-    <div class="trilha-etapas-wrap">
-      ${rec.trilha_sugerida.map(e => `
-        <div class="sub-etapa">
-          <div class="ponto">${e.ordem}</div>
-          <div class="conteudo"><b>${e.conhecimento}</b>${e.curso_sugerido ? `<span>${e.curso_sugerido}</span>` : ""}</div>
+  if (!arvore.ramos.length) {
+    document.getElementById("etapa-4-conteudo").innerHTML = raizHtml + `<p class="empty">Nenhuma área foi associada às suas disciplinas ainda.</p>`;
+    atualizarProgressoTrilha();
+    return;
+  }
+
+  const ramosHtml = arvore.ramos.map(ramo => `
+    <div class="ramo" id="ramo-${ramo.area.id}">
+      <div class="ramo-cabeca" data-toggle-ramo="${ramo.area.id}">
+        <div class="ramo-titulo-linha">
+          <svg class="ramo-seta" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+          <span class="ramo-nome">${escapeAttr(ramo.area.nome)}</span>
         </div>
-      `).join("")}
-    </div>` : "";
-
-  const gapHtml = `
-    <div class="sub-secao-titulo">O que você já cobre e o que falta</div>
-    <div class="grid-2">
-      <div>
-        <div style="font-size:12.5px; font-weight:600; margin-bottom:6px; color:var(--trail);">Você já domina</div>
-        ${gap.disciplinas_ja_cursadas.length ? `<ul class="simples">${gap.disciplinas_ja_cursadas.map(d => `<li>${d}</li>`).join("")}</ul>` : `<p class="empty">Nenhuma disciplina relacionada ainda.</p>`}
+        <span class="compat-badge">${ramo.compatibilidade_percentual}% compatível</span>
       </div>
-      <div>
-        <div style="font-size:12.5px; font-weight:600; margin-bottom:6px; color:var(--waypoint);">Recomenda-se aprofundar</div>
-        ${gap.disciplinas_recomendadas.length ? `<ul class="simples">${gap.disciplinas_recomendadas.map(d => `<li>${d}</li>`).join("")}</ul>` : `<p class="empty">Você já cobre todo o conteúdo mapeado.</p>`}
-      </div>
-    </div>`;
-
-  const complementaresHtml = rec.cursos_complementares.length ? `
-    <div class="sub-secao-titulo">Cursos complementares cadastrados</div>
-    <ul class="simples">${rec.cursos_complementares.map(c => `<li>${c.nome} — ${c.instituicao || ""} (${c.modalidade || ""}, ${c.carga_horaria || "?"}h)</li>`).join("")}</ul>` : "";
-
-  const posHtml = rec.pos_graduacoes.length ? `
-    <div class="sub-secao-titulo">Pós-graduação cadastrada</div>
-    <ul class="simples">${rec.pos_graduacoes.map(p => `<li>${p.nome} (${p.tipo || ""}) — ${p.instituicao || ""}</li>`).join("")}</ul>` : "";
+      <div class="ramo-corpo" id="ramo-corpo-${ramo.area.id}"></div>
+    </div>
+  `).join("");
 
   document.getElementById("etapa-4-conteudo").innerHTML = `
-    <span class="compat-badge">${rec.compatibilidade_percentual}% de compatibilidade</span>
-    ${trilhaHtml}
-    ${gapHtml}
-    ${complementaresHtml}
+    ${raizHtml}
+    <p class="arvore-intro">Cada ramo abaixo é um caminho possível depois da sua formação — clique para explorar.</p>
+    ${ramosHtml}
+  `;
+  atualizarProgressoTrilha();
+
+  arvore.ramos.forEach(ramo => {
+    document.getElementById(`ramo-corpo-${ramo.area.id}`).dataset.dados = JSON.stringify(ramo);
+    document.querySelector(`[data-toggle-ramo="${ramo.area.id}"]`).addEventListener("click", () => toggleRamo(ramo.area.id));
+  });
+}
+
+function toggleRamo(areaId) {
+  const ramoEl = document.getElementById(`ramo-${areaId}`);
+  const jaAberto = ramoEl.classList.contains("aberto");
+  ramoEl.classList.toggle("aberto", !jaAberto);
+  atualizarProgressoTrilha();
+
+  const corpo = document.getElementById(`ramo-corpo-${areaId}`);
+  if (!jaAberto && !corpo.dataset.renderizado) {
+    renderCorpoRamo(areaId, JSON.parse(corpo.dataset.dados));
+    corpo.dataset.renderizado = "1";
+  }
+}
+
+function renderCorpoRamo(areaId, ramo) {
+  const corpo = document.getElementById(`ramo-corpo-${areaId}`);
+
+  const posHtml = ramo.pos_graduacoes.length ? `
+    <div class="sub-secao-titulo">Pós-graduação cadastrada</div>
+    <div class="trilha-etapas-wrap">
+      ${ramo.pos_graduacoes.map((p, i) => `
+        <div class="sub-etapa">
+          <div class="ponto">${i + 1}</div>
+          <div class="conteudo"><b>${escapeAttr(p.nome)}</b><span>${escapeAttr(p.tipo || "")} — ${escapeAttr(p.instituicao || "")}</span></div>
+        </div>
+      `).join("")}
+    </div>` : `<div class="sub-secao-titulo">Pós-graduação cadastrada</div><p class="empty">Nenhuma cadastrada — busque formações reais abaixo.</p>`;
+
+  const gratuitosHtml = ramo.cursos_gratuitos.length ? `
+    <div class="sub-secao-titulo">Cursos gratuitos para começar</div>
+    ${ramo.cursos_gratuitos.map(c => `
+      <a class="gratuito-chip" href="${c.url}" target="_blank" rel="noopener noreferrer">
+        <span class="g-nome">${escapeAttr(c.nome)}</span><span class="g-plat">· ${escapeAttr(c.plataforma)}</span>
+        <div class="g-desc">${escapeAttr(c.descricao)}</div>
+      </a>
+    `).join("")}` : "";
+
+  corpo.innerHTML = `
     ${posHtml}
-    <div class="justificativa">${rec.justificativa}</div>
+    ${gratuitosHtml}
     <div class="sub-secao-titulo">Formações reais agora</div>
     <div class="formacoes-header">
       <div class="disclaimer-busca" style="margin:0;">Busca ao vivo na web — pode levar alguns segundos.</div>
       <div class="estado-filtro">
-        <input type="text" id="input-uf" maxlength="2" placeholder="UF">
-        <button id="btn-buscar-formacoes">Buscar</button>
+        <input type="text" id="input-uf-${areaId}" maxlength="2" placeholder="UF">
+        <button id="btn-buscar-formacoes-${areaId}">Buscar</button>
       </div>
     </div>
-    <div id="formacoes-resultado"></div>
+    <div id="formacoes-resultado-${areaId}"></div>
   `;
-  atualizarProgressoTrilha();
 
-  document.getElementById("btn-buscar-formacoes").addEventListener("click", () => buscarFormacoesReais(area.id, area.nome));
-  buscarFormacoesReais(area.id, area.nome);
+  document.getElementById(`btn-buscar-formacoes-${areaId}`).addEventListener("click", () => buscarFormacoesReais(areaId, ramo.area.nome));
+  buscarFormacoesReais(areaId, ramo.area.nome);
 }
 
 async function buscarFormacoesReais(areaId, areaNome) {
-  const container = document.getElementById("formacoes-resultado");
+  const container = document.getElementById(`formacoes-resultado-${areaId}`);
   container.innerHTML = `<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>`;
 
-  const uf = (document.getElementById("input-uf").value || "").trim().toUpperCase();
+  const uf = (document.getElementById(`input-uf-${areaId}`).value || "").trim().toUpperCase();
   const url = `${API}/api/cursos/${CURSO_ID}/formacoes-reais/${areaId}${uf ? `?estado=${encodeURIComponent(uf)}` : ""}`;
 
   try {
     const dados = await fetch(url).then(r => r.json());
 
     if (dados.erro && !dados.formacoes.length) {
-      container.innerHTML = `<div class="erro-busca">${dados.erro}<button id="btn-tentar-de-novo">Tentar de novo</button></div>`;
-      document.getElementById("btn-tentar-de-novo").addEventListener("click", () => buscarFormacoesReais(areaId, areaNome));
+      container.innerHTML = `<div class="erro-busca">${dados.erro}<button id="btn-tentar-de-novo-${areaId}">Tentar de novo</button></div>`;
+      document.getElementById(`btn-tentar-de-novo-${areaId}`).addEventListener("click", () => buscarFormacoesReais(areaId, areaNome));
       return;
     }
 
@@ -865,8 +1058,8 @@ async function buscarFormacoesReais(areaId, areaNome) {
 
     container.innerHTML = html;
   } catch (err) {
-    container.innerHTML = `<div class="erro-busca">Não foi possível buscar agora. Verifique sua conexão e tente de novo.<button id="btn-tentar-de-novo">Tentar de novo</button></div>`;
-    document.getElementById("btn-tentar-de-novo").addEventListener("click", () => buscarFormacoesReais(areaId, areaNome));
+    container.innerHTML = `<div class="erro-busca">Não foi possível buscar agora. Verifique sua conexão e tente de novo.<button id="btn-tentar-de-novo-${areaId}">Tentar de novo</button></div>`;
+    document.getElementById(`btn-tentar-de-novo-${areaId}`).addEventListener("click", () => buscarFormacoesReais(areaId, areaNome));
   }
 }
 

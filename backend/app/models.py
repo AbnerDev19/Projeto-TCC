@@ -3,7 +3,7 @@ Modelos do banco de dados — Trilha Acadêmica
 Baseado no esquema descrito na seção 24 do planejamento do TCC.
 """
 from sqlalchemy import (
-    Column, Integer, String, Text, ForeignKey, Table, ARRAY
+    Column, Integer, String, Text, ForeignKey, Table, ARRAY, Boolean
 )
 from sqlalchemy.orm import relationship
 from .database import Base
@@ -54,6 +54,11 @@ class Disciplina(Base):
     carga_horaria = Column(Integer)
     ementa = Column(Text)
     curso_id = Column(Integer, ForeignKey("cursos.id"))
+    # Marca se o próprio estudante já cursou/concluiu essa disciplina — é
+    # estado do usuário, não do currículo (o PPC lista a grade inteira do
+    # curso, independente de quanto dela já foi cursado). Começa como não
+    # concluída; o usuário marca manualmente na tela de disciplinas.
+    concluida = Column(Boolean, default=False)
 
     curso = relationship("Curso", back_populates="disciplinas")
     areas = relationship("Area", secondary=disciplina_area, back_populates="disciplinas")

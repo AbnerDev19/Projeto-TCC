@@ -45,9 +45,38 @@ def listar_disciplinas(curso_id: int, db: Session = Depends(get_db)):
     return disciplinas
 
 
+@app.patch("/api/disciplinas/{disciplina_id}/concluida", response_model=schemas.DisciplinaOut, tags=["Cursos"])
+def marcar_disciplina_concluida(disciplina_id: int, dados: schemas.DisciplinaConcluidaIn, db: Session = Depends(get_db)):
+    """
+    Marca (ou desmarca) uma disciplina como já concluída pelo estudante.
+    É estado do usuário, não do currículo — o PPC lista a grade inteira do
+    curso, independente de quanto dela a pessoa já cursou de fato.
+    """
+    disciplina = db.query(models.Disciplina).filter(models.Disciplina.id == disciplina_id).first()
+    if not disciplina:
+        raise HTTPException(status_code=404, detail="Disciplina não encontrada.")
+    disciplina.concluida = dados.concluida
+    db.commit()
+    db.refresh(disciplina)
+    return disciplina
+
+
 @app.get("/api/areas", response_model=List[schemas.AreaOut], tags=["Áreas"])
 def listar_areas(db: Session = Depends(get_db)):
     return db.query(models.Area).all()
+
+
+@app.get("/api/areas/{area_id}/cursos-gratuitos", response_model=List[schemas.CursoGratuitoOut], tags=["Áreas"])
+def cursos_gratuitos_da_area(area_id: int, db: Session = Depends(get_db)):
+    """
+    Lista curada (não busca ao vivo) de cursos genuinamente gratuitos para
+    a área — usada nos cards de disciplina. Curadoria em area_data.py.
+    """
+    area = db.query(models.Area).filter(models.Area.id == area_id).first()
+    if not area:
+        raise HTTPException(status_code=404, detail="Área não encontrada.")
+    definicao = AREA_DEFINICOES.get(area.nome, {})
+    return [schemas.CursoGratuitoOut(**c) for c in definicao.get("cursos_gratuitos", [])]
 
 
 @app.get(
@@ -203,6 +232,46 @@ def confirmar_ppc(dados: schemas.PPCConfirmarIn, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(curso)
     return curso
+
+
+@app.get("/api/cursos/{curso_id}/arvore", response_model=schemas.ArvoreOut, tags=["Trilha"])
+def arvore_da_trilha(curso_id: int, db: Session = Depends(get_db)):
+    """
+    Monta a árvore de trilha pós-formação (pedido do usuário): a partir das
+    áreas realmente relacionadas às disciplinas do curso, devolve um "ramo"
+    por área — cada um com compatibilidade, pós-graduações cadastradas e
+    cursos gratuitos curados — para o front-end renderizar como ramificações
+    que o estudante pode explorar, em vez de forçar escolher só a de maior
+    compatibilidade.
+    """
+    curso = db.query(models.Curso).filter(models.Curso.id == curso_id).first()
+    if not curso:
+        raise HTTPException(status_code=404, detail="Curso não encontrado.")
+
+    area_ids = (
+        db.query(models.disciplina_area.c.area_id)
+        .join(models.Disciplina, models.Disciplina.id == models.disciplina_area.c.disciplina_id)
+        .filter(models.Disciplina.curso_id == curso_id)
+        .distinct()
+        .all()
+    )
+    areas = db.query(models.Area).filter(models.Area.id.in_([a for (a,) in area_ids])).all()
+
+    ramos = []
+    for area in areas:
+        percentual, _ = recommendation.calcular_compatibilidade(db, curso_id, area.id)
+        pos_graduacoes = db.query(models.PosGraduacao).filter(models.PosGraduacao.area_id == area.id).all()
+        definicao = AREA_DEFINICOES.get(area.nome, {})
+        cursos_gratuitos = [schemas.CursoGratuitoOut(**c) for c in definicao.get("cursos_gratuitos", [])]
+        ramos.append(schemas.ArvoreRamoOut(
+            area=area,
+            compatibilidade_percentual=percentual,
+            pos_graduacoes=pos_graduacoes,
+            cursos_gratuitos=cursos_gratuitos,
+        ))
+    ramos.sort(key=lambda r: r.compatibilidade_percentual, reverse=True)
+
+    return schemas.ArvoreOut(curso=curso, ramos=ramos)
 
 
 @app.get("/api/cursos/{curso_id}/formacoes-reais/{area_id}", response_model=schemas.FormacoesReaisOut, tags=["Formações reais"])
